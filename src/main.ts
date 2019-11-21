@@ -7,6 +7,11 @@ import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import { _ } from "./utils/lodash";
 import VueClipboard from "vue-clipboard2";
+import lang from "element-ui/lib/locale/lang/en";
+import locale from "element-ui/lib/locale";
+
+// configure language
+locale.use(lang);
 
 Vue.use(VueClipboard);
 Vue.use(ElementUI);
