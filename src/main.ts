@@ -3,7 +3,6 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import "./components";
-import "browser-solc";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import { _ } from "./utils/lodash";

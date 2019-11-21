@@ -7,7 +7,6 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import ace, { edit } from "brace";
 import { EditorStore } from "../store/editor";
 import { Sync } from "vuex-pathify";
-import BrowserSolc from "browser-solc/src/browser-solc";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";

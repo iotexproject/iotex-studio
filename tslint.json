@@ -5,7 +5,13 @@
   "linterOptions": {
     "exclude": ["node_modules/**"]
   },
-  "rules": {},
+  "rules": {
+    "indent": [true, "spaces", 2],
+    "prettier": true,
+    "no-floating-promises": false,
+    "promise-function-async": true,
+    "await-promise": true
+  },
   "jsRules": {
     "no-empty": true
   }
