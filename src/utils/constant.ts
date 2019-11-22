@@ -12,3 +12,10 @@ contract Array {
         arr.pop();
     }
 }`;
+
+export const defaultTypeValue = {
+  uint256: "0",
+  "uint256[]": "[]",
+  string: "",
+  "string[": "[]"
+};

@@ -49,13 +49,10 @@ export class JSVM {
     gasPrice?: number;
     value?: number;
   }): Promise<string> {
-    const params = datas.length ? abi.rawEncode(types, datas) : "";
+    const params = abi.rawEncode(types, datas);
     const nonce = await this.getAccountNonce(senderPrivateKey);
+    let data = "0x" + bytecode.toString("hex") + params.toString("hex");
 
-    let data = "0x" + bytecode.toString("hex");
-    if (params) {
-      data += params.toString("hex");
-    }
     const tx = new Transaction({
       value,
       gasLimit,
@@ -92,12 +89,9 @@ export class JSVM {
     gasPrice?: number;
     value?: number;
   }) {
-    const params = datas.length > 0 ? abi.rawEncode(types, datas) : "";
+    const params = abi.rawEncode(types, datas);
     const nonce = await this.getAccountNonce(senderPrivateKey);
-    let data = "0x" + abi.methodID(method, types).toString("hex");
-    if (params) {
-      data += params.toString("hex");
-    }
+    let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
     const tx = new Transaction({
       to: contractAddress,
       value,

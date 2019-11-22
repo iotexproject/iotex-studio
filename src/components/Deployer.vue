@@ -1,5 +1,5 @@
 <template lang="pug">
-  .flex.flex-col
+  .deployer.flex.flex-col
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
         el-select(v-model="currentEnvironment" )
@@ -19,10 +19,9 @@
           el-option(v-for="item in contracts" :key="item.name" :label="item.name" :value="item")
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
-          el-input(:placeholder="cstr.placeholder" v-model="cstr.input.value")
+          el-input(:placeholder="cstr.placeholder" v-if="cstr.placeholder"  v-model="cstr.cstr.datas")
       .deplyed-contracts.mt-6.text-sm
-        .flex
-          p.mb-2.text-sm.text-gray-800.font-bold Deployed Contracts
+        .flex.mb-2.text-sm.text-gray-800.font-bold Deployed Contracts
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
           .flex.justify-between
             div.mb-2 {{contract.name}} at {{contract.address|truncate(12, "...")}}
@@ -31,7 +30,7 @@
           .flex.my-2(v-for="(func,index) in $_.get(contract, 'abi.function')" :key="index")
             el-button(@click="interactContract({func, contract })" style="width: 100px;min-width: 100px; height: 40px" size="small") {{func.name}}
             div
-              el-input(v-if="func.inputs.length > 0" :placeholder="parseInputs(func)" v-model="func.inputs[0].value")
+              el-input(v-if="func.inputs.length > 0" :placeholder="parseInputs(func)" v-model="func.datas")
               p(v-for="(result, index) in  func.results" :key="index") {{index}} : {{result}}
 
         
@@ -50,6 +49,7 @@ import * as util from "ethereumjs-util";
 import { utils } from "ethers";
 import abi from "ethereumjs-abi";
 import path from "path";
+import { defaultTypeValue } from "../utils/constant";
 
 @Component
 export default class Deployer extends Vue {
@@ -88,12 +88,20 @@ export default class Deployer extends Vue {
   async deployContract() {
     const { privateKey } = this.account;
     const { bytecode, name, abi } = this.currentContract;
-    const { type, value: data } = this.cstr.input;
+    const { inputs = [], datas: _datas = "" } = this.cstr.cstr || {};
     let { gasLimit } = this.form;
     const { value } = this;
 
-    console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types: [type], datas: [data], value, gasLimit });
-    const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types: [type], datas: [data], gasLimit, value });
+    const types = inputs.map(i => i.type);
+    const datas = _datas ? _datas.split(/,(?![^(]*\)) /) : [];
+    types.forEach((o, i) => {
+      if (!datas[i]) {
+        datas[i] = defaultTypeValue[o];
+      }
+    });
+
+    console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types, datas, value, gasLimit });
+    const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
 
     this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), visible: false });
     this.reloadAccounts();
@@ -106,16 +114,21 @@ export default class Deployer extends Vue {
     let { gasLimit } = this.form;
     const { value } = this;
 
-    const inputTypes = inputs.map(i => i.type);
+    const types = inputs.map(i => i.type);
     const outputTypes = outputs.map(i => i.type);
-    const datas = inputs.map(i => i.value || "");
+    const datas = func.datas ? func.datas.split(",") : [];
+    types.forEach((o, i) => {
+      if (!datas[i]) {
+        datas[i] = defaultTypeValue[o];
+      }
+    });
 
-    console.log({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types: inputTypes, datas, value, gasLimit });
+    console.log({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types, datas, value, gasLimit });
     const result = await jsvm.interactContract({
       method: func.name,
       senderPrivateKey: new Buffer(privateKey, "hex"),
       contractAddress: util.toBuffer(address),
-      types: inputTypes,
+      types,
       datas,
       value,
       gasLimit
@@ -148,9 +161,8 @@ export default class Deployer extends Vue {
   }
 
   parseInputs(item) {
-    const input = _.get(item, "inputs.0");
-    if (!input) return null;
-    return `${input.name} ${input.type}`;
+    if (item.inputs.length == 0) return null;
+    return item.inputs.map(input => `${input.name} ${input.type}`);
   }
 
   get value() {
@@ -165,11 +177,11 @@ export default class Deployer extends Vue {
 
   get cstr() {
     const cstr = _.get(this.currentContract, "abi.constructor.0");
-    const input = _.get(cstr, "inputs.0", {});
+    const inputs = _.get(cstr, "inputs");
+    const placeholder = inputs && inputs.length > 0 ? cstr.inputs.map(input => ` ${input.name} ${input.type}`) : null;
     return {
       cstr,
-      input,
-      placeholder: `${input.name} ${input.type}`
+      placeholder
     };
   }
 
@@ -183,9 +195,17 @@ export default class Deployer extends Vue {
         this.contracts[k] = { name, abi, bytecode };
         if (!this.currentContract) {
           this.currentContract = this.contracts[k];
+        } else {
+          this.currentContract = this.contracts[this.currentContract.name];
         }
       });
     });
   }
 }
 </script>
+
+<style scoped lang="stylus">
+.deployer
+  >>> .el-input__inner
+    font-size 12px
+</style>
