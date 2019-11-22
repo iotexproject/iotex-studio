@@ -1,6 +1,6 @@
 <template lang="pug">
   div.flex.justify-center
-    div.flex.flex-col
+    div.flex.flex-col(style="width:260px")
       compiler
       el-divider
       deployer

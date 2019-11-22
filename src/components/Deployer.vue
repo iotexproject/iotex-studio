@@ -2,11 +2,18 @@
   .flex.flex-col
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
-        el-select(v-model="currentEnvironment")
+        el-select(v-model="currentEnvironment" )
           el-option(v-for="item in environments" :key="item" :label="item" :value="item")
       el-form-item(label="Account")
         el-select(v-model="accountIndex")
           el-option(v-for="(item, index) in accounts" :key="index" :label="accountLabel(item)" :value="index")
+      el-form-item(label="Gas Limit")
+        el-input(v-model="form.gasLimit" size="small")
+      el-form-item(label="Value")
+        .flex
+          el-input(v-model="form.value" size="small")
+          el-select(v-model="form.valueType" size="small")
+            el-option(v-for="(item, index) in valueTypes" :key="index" :label="item" :value="item")
       .contract.mt-4
         el-select.w-full(v-model="currentContract")
           el-option(v-for="item in contracts" :key="item.name" :label="item.name" :value="item")
@@ -54,6 +61,13 @@ export default class Deployer extends Vue {
     privateKeyBuffer: Buffer;
     account: any;
   }[] = [];
+
+  form = {
+    gasLimit: 3000000,
+    value: 0,
+    valueType: "wei"
+  };
+  valueTypes = ["wei", "gwei", "finney", "ether"];
   accountIndex = 0;
 
   contracts: any = {};
@@ -74,9 +88,12 @@ export default class Deployer extends Vue {
   async deployContract() {
     const { privateKey } = this.account;
     const { bytecode, name, abi } = this.currentContract;
-    const { type, value } = this.cstr.input;
-    console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types: [type], datas: [value] });
-    const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types: [type], datas: [value] });
+    const { type, value: data } = this.cstr.input;
+    let { gasLimit } = this.form;
+    const { value } = this;
+
+    console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types: [type], datas: [data], value, gasLimit });
+    const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types: [type], datas: [data], gasLimit, value });
 
     this.deployedContracts[address] = { address, name, abi, visible: false };
     this.reloadAccounts();
@@ -86,13 +103,23 @@ export default class Deployer extends Vue {
     const { privateKey } = this.account;
     const { address } = contract;
     const { inputs, outputs } = func;
+    let { gasLimit } = this.form;
+    const { value } = this;
+
     const inputTypes = inputs.map(i => i.type);
     const outputTypes = outputs.map(i => i.type);
-
     const datas = inputs.map(i => i.value || "");
 
-    console.log({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types: inputTypes, datas });
-    const result = await jsvm.interactContract({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types: inputTypes, datas });
+    console.log({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types: inputTypes, datas, value, gasLimit });
+    const result = await jsvm.interactContract({
+      method: func.name,
+      senderPrivateKey: new Buffer(privateKey, "hex"),
+      contractAddress: util.toBuffer(address),
+      types: inputTypes,
+      datas,
+      value,
+      gasLimit
+    });
 
     if (outputTypes.length > 0) {
       const results = abi.rawDecode(outputTypes, result.execResult.returnValue);
@@ -124,6 +151,12 @@ export default class Deployer extends Vue {
     const input = _.get(item, "inputs.0");
     if (!input) return null;
     return `${input.name} ${input.type}`;
+  }
+
+  get value() {
+    let { value: _value, valueType } = this.form;
+
+    return Number(utils.parseUnits(_value.toString(), valueType));
   }
 
   get account() {
