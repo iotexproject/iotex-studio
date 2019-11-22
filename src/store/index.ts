@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import editor from "./editor";
+
 import pathify, { make } from "vuex-pathify";
 pathify.options.mapping = "simple";
 

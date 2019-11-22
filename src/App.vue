@@ -22,4 +22,6 @@ export default class App extends Vue {}
   margin-top 60px
   .el-button--text
     color: grey
+  .el-form-item
+    margin-bottom 0
 </style>

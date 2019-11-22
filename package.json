@@ -9,7 +9,6 @@
     "start": "ts-node -T ./server.ts"
   },
   "dependencies": {
-    "@types/express": "^4.17.2",
     "ace-mode-solidity": "^0.1.1",
     "brace": "^0.11.1",
     "core-js": "^3.3.2",
@@ -27,11 +26,14 @@
     "vuex-pathify": "^1.4.0"
   },
   "devDependencies": {
+    "@types/ace": "0.0.42",
+    "@types/express": "^4.17.2",
     "@types/lodash": "^4.14.149",
     "@types/pug": "^2.0.4",
     "@vue/cli-plugin-babel": "^4.0.0",
     "@vue/cli-plugin-typescript": "^4.0.0",
     "@vue/cli-service": "^4.0.0",
+    "typed-emitter": "^0.2.0",
     "pug": "^2.0.4",
     "pug-loader": "^2.4.0",
     "pug-plain-loader": "^1.0.0",

@@ -10,16 +10,14 @@ import VueClipboard from "vue-clipboard2";
 import lang from "element-ui/lib/locale/lang/en";
 import locale from "element-ui/lib/locale";
 
-// configure language
 locale.use(lang);
 
 Vue.use(VueClipboard);
 Vue.use(ElementUI);
 
-Vue.config.productionTip = false;
-
 Vue.prototype.$_ = _;
 
+Vue.config.productionTip = false;
 new Vue({
   router,
   store,

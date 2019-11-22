@@ -5,74 +5,31 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import ace, { edit } from "brace";
-import { EditorStore } from "../store/editor";
 import { Sync } from "vuex-pathify";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
+import { EditorStore } from "../store/type";
 
 @Component
 export default class Editor extends Vue {
   @Prop({ type: String }) height: string;
   @Prop({ type: String }) width: string;
-  @Prop({ type: String, default: "text" }) lang: string;
-  @Prop({ type: String, default: "chrome" }) theme: string;
-  @Prop({ type: Object }) options: any;
 
-  @Sync("editor/content")
-  content: string;
-
-  @Sync("editor/solc")
-  solc: EditorStore["solc"];
-
-  editor: ace.Editor = null;
-
-  created() {
-    eventBus.$on("solc:compile", () => {
-      this.compile();
-    });
-  }
+  @Sync("editor/solc") solc: EditorStore["solc"];
+  @Sync("editor/ace@content") content: string;
+  @Sync("editor/ace@editor") editor: ace.Editor;
+  @Sync("editor/ace@theme") theme: string;
+  @Sync("editor/ace@lang") lang: string;
+  @Sync("editor/ace@options") options: any;
 
   mounted() {
     this.initAceEditor();
-    this.initBrowserSolc();
   }
   beforeDestory() {
     this.editor.destroy();
     this.editor.container.remove();
-  }
-
-  async compile() {
-    const [errs, result] = await Helper.runAsync(this.solc.compiler(this.content, 1));
-    this.editor.session.clearAnnotations();
-    if (errs) {
-      this.editor.session.setAnnotations(
-        errs.map(err => {
-          const [m] = err.formattedMessage.match(/\d+:\d+/);
-          const [row, column] = m.split(":");
-          return {
-            type: "error",
-            text: err.formattedMessage,
-            row: row - 1,
-            column
-          };
-        })
-      );
-      return;
-    }
-
-    const compileResult = _.keyBy(result, "name");
-    this.solc = { ...this.solc, ...{ compileResult, currentContract: _.get(result, "0") } };
-    this.$emit("compile", compileResult);
-    eventBus.$emit("solc:compiled", compileResult);
-  }
-
-  async initBrowserSolc() {
-    const versions = await solcjs.versions();
-    this.solc = { ...this.solc, ...{ versions } };
-
-    await this.onSolcVersionChange();
   }
 
   initAceEditor() {
@@ -81,6 +38,7 @@ export default class Editor extends Vue {
     editor.$blockScrolling = Infinity;
 
     this.$emit("init", editor);
+    eventBus.emit("editor.init", editor);
 
     editor.getSession().setMode(`ace/mode/${lang}`);
     editor.setTheme(`ace/theme/${theme}`);
@@ -122,13 +80,6 @@ export default class Editor extends Vue {
     this.$nextTick(() => {
       this.editor.resize();
     });
-  }
-
-  @Watch("solc.version")
-  async onSolcVersionChange(val = this.solc.version) {
-    this.solc = { ...this.solc, ...{ loading: true } };
-    const compiler = await solcjs(val);
-    this.solc = { ...this.solc, ...{ compiler, loading: false } };
   }
 }
 </script>

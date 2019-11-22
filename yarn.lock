@@ -781,6 +781,11 @@
     error-stack-parser "^2.0.0"
     string-width "^2.0.0"
 
+"@types/ace@0.0.42":
+  version "0.0.42"
+  resolved "https://registry.npm.taobao.org/@types/ace/download/@types/ace-0.0.42.tgz#941973bc5c1d5c9213f0561b8b2d82a18e1400ea"
+  integrity sha1-lBlzvFwdXJIT8FYbiy2CoY4UAOo=
+
 "@types/babel-types@*", "@types/babel-types@^7.0.0":
   version "7.0.7"
   resolved "https://registry.npm.taobao.org/@types/babel-types/download/@types/babel-types-7.0.7.tgz#667eb1640e8039436028055737d2b9986ee336e3"
@@ -8162,6 +8167,11 @@ type-is@~1.6.17, type-is@~1.6.18:
   dependencies:
     media-typer "0.3.0"
     mime-types "~2.1.24"
+
+typed-emitter@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npm.taobao.org/typed-emitter/download/typed-emitter-0.2.0.tgz#ede9a20a3aa78cb853c2866ddad968a3925830e1"
+  integrity sha1-7emiCjqnjLhTwoZt2tloo5JYMOE=
 
 typedarray@^0.0.6:
   version "0.0.6"
