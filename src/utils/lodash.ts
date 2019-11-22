@@ -7,6 +7,7 @@ import range from "lodash/range";
 import omitBy from "lodash/omitBy";
 import isNil from "lodash/isNil";
 import compact from "lodash/compact";
+import cloneDeep from "lodash/cloneDeep";
 
 export const _ = {
   each,
@@ -17,5 +18,6 @@ export const _ = {
   range,
   omitBy,
   isNil,
-  compact
+  compact,
+  cloneDeep
 };

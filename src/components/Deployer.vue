@@ -95,7 +95,7 @@ export default class Deployer extends Vue {
     console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types: [type], datas: [data], value, gasLimit });
     const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types: [type], datas: [data], gasLimit, value });
 
-    this.deployedContracts[address] = { address, name, abi, visible: false };
+    this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), visible: false });
     this.reloadAccounts();
   }
 
