@@ -5,11 +5,11 @@
         el-select(v-model="solc.version")
           el-option(v-for="item in solc.versions.releases" :key="item" :label="item" :value="item")
       div.mt-2.w-full
-        el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" type="primary") Compile
+        el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile
       .contract.mt-4(v-if="solc.currentContract")
-        el-form-item(label="Contract")
-          el-select(v-model="solc.currentContract")
-            el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item")
+        //- el-form-item(label="Contract")
+        //-   el-select(v-model="solc.currentContract")
+        //-     el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item")
         div.flex.justify-end
           el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(solc, 'currentContract.abi')") ABI
           el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(solc, 'currentContract.binary')") Bytecode
@@ -32,6 +32,7 @@ export default class Compiler extends Vue {
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
 
   async compile() {
+    if (!this.solc.compiler) return;
     this.solc = { ...this.solc, ...{ compileLoading: true } };
     localStorage.setItem("content", this.content);
     const [errs, result] = await Helper.runAsync(this.solc.compiler(this.content, 1));

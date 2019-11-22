@@ -9,6 +9,7 @@ import { _ } from "./utils/lodash";
 import VueClipboard from "vue-clipboard2";
 import lang from "element-ui/lib/locale/lang/en";
 import locale from "element-ui/lib/locale";
+import "./utils/filter";
 
 locale.use(lang);
 

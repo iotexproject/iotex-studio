@@ -18,7 +18,31 @@ export interface EditorStore {
       nightly: string[];
       releases: string[];
     };
-    compileResult: Record<string, any>;
+    compileResult: Record<string, CompiledContract>;
     currentContract: any;
   };
 }
+
+export type CompiledContract = {
+  abi: {
+    constant: boolean;
+    inputs: {
+      name: string;
+      type: string;
+    }[];
+    outpus: {
+      name: string;
+      type: string;
+    }[];
+    name: string;
+    payable: boolean;
+    stateMutability: string;
+    type: string;
+  }[];
+  assembly: Object;
+  binary: Object;
+  compiler: Object;
+  metadata: Object;
+  name: string;
+  sources: Object;
+};

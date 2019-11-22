@@ -12,16 +12,19 @@ export default class App extends Vue {}
 </script>
 
 <style lang="stylus">
-@import "./assets/tailwind.css"
+@import './assets/tailwind.css'
+
 #app
   font-family 'Avenir', Helvetica, Arial, sans-serif
   -webkit-font-smoothing antialiased
   -moz-osx-font-smoothing grayscale
-  text-align center
+  // text-align center
   color #2c3e50
   margin-top 60px
   .el-button--text
-    color: grey
+    color grey
   .el-form-item
     margin-bottom 0
+  .el-form-item__label
+    font-size 12px
 </style>

@@ -1,6 +1,9 @@
 <template lang="pug">
   div.flex.justify-center
-    compiler
+    div.flex.flex-col
+      compiler
+      el-divider
+      deployer
     editor.ml-4(ref="editor" height='70vh' width='70vw')
 </template>
 

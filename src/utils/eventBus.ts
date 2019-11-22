@@ -1,11 +1,12 @@
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 import ace from "brace";
+import { EditorStore } from "../store/type";
 
 interface MessageEvents {
   "editor.init": (editor: ace.Editor) => void;
   "solc.compile": () => void;
-  "solc.compiled": (result: any) => void;
+  "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;
