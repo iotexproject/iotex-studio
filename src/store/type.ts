@@ -1,6 +1,13 @@
 import ace from "brace";
 
 export interface EditorStore {
+  fileManager: {
+    curDir: string;
+    curFilePath: string;
+    file?: { path: string; name: string; content: string };
+    files: EditorStore["fileManager"]["file"][];
+    defaultFiles: { path: string; content: string; ensure: boolean }[];
+  };
   ace: {
     content: string;
     editor: ace.Editor;

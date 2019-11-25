@@ -30,17 +30,31 @@ export default class Compiler extends Vue {
   @Sync("editor/solc") solc: EditorStore["solc"];
   @Sync("editor/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
+  @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
 
   async compile() {
     if (!this.solc.compiler) return;
     this.solc = { ...this.solc, ...{ compileLoading: true } };
-    localStorage.setItem("content", this.content);
-    const [errs, result] = await Helper.runAsync(this.solc.compiler(this.content, 1));
-    this.editor.session.clearAnnotations();
+    let _errs = [];
+    let _result = {};
     this.solc = { ...this.solc, ...{ compileLoading: false } };
-    if (errs) {
+
+    await Promise.all(
+      this.files.map(async file => {
+        const [errs, result] = await Helper.runAsync(this.solc.compiler(file.content));
+        const compileResult = _.keyBy(result, "name");
+        if (errs) {
+          _errs = [..._errs, ...errs];
+          return;
+        }
+        _result = { ..._result, ...compileResult };
+      })
+    );
+
+    this.editor.session.clearAnnotations();
+    if (_errs.length > 0) {
       this.editor.session.setAnnotations(
-        errs.map(err => {
+        _errs.map(err => {
           const [m] = err.formattedMessage.match(/\d+:\d+/);
           const [row, column] = m.split(":");
           return {
@@ -53,10 +67,9 @@ export default class Compiler extends Vue {
       );
       return;
     }
-
-    const compileResult = _.keyBy(result, "name");
-    this.solc = { ...this.solc, ...{ compileResult, currentContract: _.get(result, "0") } };
-    eventBus.emit("solc.compiled", compileResult);
+    console.log(_result);
+    this.solc = { ...this.solc, ...{ compileResult: _result, currentContract: Object.keys(_result)[0] } };
+    eventBus.emit("solc.compiled", _result);
   }
 
   async initSolc() {

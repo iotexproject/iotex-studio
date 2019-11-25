@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import ace, { edit } from "brace";
-import { Sync } from "vuex-pathify";
+import { Sync, Get } from "vuex-pathify";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
@@ -18,11 +18,15 @@ export default class Editor extends Vue {
   @Prop({ type: String }) width: string;
 
   @Sync("editor/solc") solc: EditorStore["solc"];
-  @Sync("editor/ace@content") content: string;
   @Sync("editor/ace@editor") editor: ace.Editor;
   @Sync("editor/ace@theme") theme: string;
   @Sync("editor/ace@lang") lang: string;
   @Sync("editor/ace@options") options: any;
+
+  @Sync("editor/fileManager@curFilePath") curFilePath: string;
+  @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
+
+  @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
   mounted() {
     this.initAceEditor();
@@ -33,7 +37,7 @@ export default class Editor extends Vue {
   }
 
   initAceEditor() {
-    const { lang, theme, options } = this;
+    const { lang, theme, options, curFilePath } = this;
     const editor = (this.editor = ace.edit(this.$el as HTMLElement));
     editor.$blockScrolling = Infinity;
 
@@ -42,13 +46,15 @@ export default class Editor extends Vue {
 
     editor.getSession().setMode(`ace/mode/${lang}`);
     editor.setTheme(`ace/theme/${theme}`);
-    if (this.content) {
-      editor.setValue(this.content, 1);
+
+    if (this.curFilePath) {
+      if (!this.curFile) return;
+      this.editor.session.setValue(this.curFile.content);
     }
 
     editor.on("change", () => {
       const content = editor.getValue();
-      this.content = content;
+      eventBus.emit("editor.content.update", content);
     });
     if (this.options) {
       editor.setOptions(options);
@@ -80,6 +86,11 @@ export default class Editor extends Vue {
     this.$nextTick(() => {
       this.editor.resize();
     });
+  }
+
+  @Watch("curFilePath")
+  oncurFilePathNameChange() {
+    this.editor.session.setValue(this.curFile.content);
   }
 }
 </script>

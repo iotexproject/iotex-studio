@@ -15,8 +15,8 @@
           el-select(v-model="form.valueType" size="small")
             el-option(v-for="(item, index) in valueTypes" :key="index" :label="item" :value="item")
       .contract.mt-4
-        el-select.w-full(v-model="currentContract")
-          el-option(v-for="item in contracts" :key="item.name" :label="item.name" :value="item")
+        el-select.w-full(v-model="currentContractName")
+          el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
           el-input(:placeholder="cstr.placeholder" v-if="cstr.placeholder"  v-model="cstr.cstr.datas")
@@ -71,7 +71,7 @@ export default class Deployer extends Vue {
   accountIndex = 0;
 
   contracts: any = {};
-  currentContract: any = null;
+  currentContractName: string = null;
 
   deployedContracts: {
     [key: string]: {
@@ -84,6 +84,10 @@ export default class Deployer extends Vue {
 
   environments = ["JavaScript VM"];
   currentEnvironment = "JavaScript VM";
+
+  get currentContract() {
+    return this.contracts[this.currentContractName];
+  }
 
   async deployContract() {
     const { privateKey } = this.account;
@@ -194,9 +198,7 @@ export default class Deployer extends Vue {
         const bytecode = _.get(v, "binary.bytecodes.bytecode");
         this.contracts[k] = { name, abi, bytecode };
         if (!this.currentContract) {
-          this.currentContract = this.contracts[k];
-        } else {
-          this.currentContract = this.contracts[this.currentContract.name];
+          this.currentContractName = this.contracts[k].name;
         }
       });
     });

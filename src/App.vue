@@ -13,6 +13,7 @@ export default class App extends Vue {}
 
 <style lang="stylus">
 @import './assets/tailwind.css'
+@import '~v-contextmenu/dist/index.css'
 
 #app
   font-family 'Avenir', Helvetica, Arial, sans-serif

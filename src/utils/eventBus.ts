@@ -5,6 +5,7 @@ import { EditorStore } from "../store/type";
 
 interface MessageEvents {
   "editor.init": (editor: ace.Editor) => void;
+  "editor.content.update": (content: string) => void;
   "solc.compile": () => void;
   "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
 }

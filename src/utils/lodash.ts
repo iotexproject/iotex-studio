@@ -5,6 +5,9 @@ import keyBy from "lodash/keyBy";
 import groupBy from "lodash/groupBy";
 import range from "lodash/range";
 import omitBy from "lodash/omitBy";
+import omit from "lodash/omit";
+import pick from "lodash/pick";
+
 import isNil from "lodash/isNil";
 import compact from "lodash/compact";
 import cloneDeep from "lodash/cloneDeep";
@@ -19,5 +22,7 @@ export const _ = {
   omitBy,
   isNil,
   compact,
+  omit,
+  pick,
   cloneDeep
 };

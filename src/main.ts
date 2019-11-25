@@ -11,6 +11,9 @@ import lang from "element-ui/lib/locale/lang/en";
 import locale from "element-ui/lib/locale";
 import "./utils/filter";
 
+import contentmenu from "v-contextmenu";
+Vue.use(contentmenu);
+
 locale.use(lang);
 
 Vue.use(VueClipboard);
