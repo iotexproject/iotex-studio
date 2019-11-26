@@ -1,13 +1,29 @@
 <template lang="pug">
 
   .file-manager.flex.flex-col.relative(v-contextmenu:contextmenu)
-    div
-      .file(v-for="item in files" :key="item.path" :class="{'bg-gray-500': item.path == curFilePath}" @click.prevent="curFilePath = item.path") 
+    .flex.flex-col
+      .file(
+        v-for="item in files" 
+        :key="item.path" 
+        :class="{'bg-gray-500': item.path == curFilePath}" 
+        @click.prevent="curFilePath = item.path" 
+        @mouseover="mouseoverFile(item)" 
+        ) 
         span {{item.name}}
-    v-contextmenu(ref="contextmenu")
-      v-contextmenu-item Create new file
-      v-contextmenu-item(disabled) Rename file
-      v-contextmenu-item(disabled) Delete file
+    v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
+      v-contextmenu-item(@click="createFileForm.visible = true") Create new file
+      v-contextmenu-item(:disabled="!cursor.isFile") Rename file
+      v-contextmenu-item(:disabled="!cursor.isFile" @click="deleteFile") Delete file
+
+    el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
+      el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible")
+        el-form-item(prop="name" )
+          el-input(v-model="createFileForm.name"  autofocus placeholder="file name")
+      span(slot="footer")
+        el-button(@click="createFileForm.visible= false") Cancel
+        el-button(type="primary" @click="createNewFile") Confirm
+
+    
 
 </template>
 
@@ -20,6 +36,8 @@ import { Sync, Get } from "vuex-pathify";
 import { EditorStore } from "../store/type";
 import { _ } from "../utils/lodash";
 import { eventBus } from "../utils/eventBus";
+import { debounce } from "helpful-decorators";
+import { Helper } from "../utils/helper";
 
 //@ts-ignore
 BrowserFS.configure({ fs: "LocalStorage" }, e => {
@@ -36,16 +54,33 @@ export default class FileManager extends Vue {
 
   fileManager: FS = new FS({});
 
-  async created() {
-    eventBus.on("editor.init", async () => {
-      await this.initProject();
-      await this.loadFiles();
-    });
+  cursor: {
+    isFile: boolean;
+    file: EditorStore["fileManager"]["file"];
+  } = {
+    isFile: false,
+    file: null
+  };
 
-    eventBus.on("editor.content.update", async content => {
-      this.files[this.curFileIndex].content = content;
-      await this.writeFile({ path: this.curFilePath, content });
-    });
+  createFileForm = {
+    visible: false,
+    name: "",
+    rules: { name: [{ required: true }] }
+  };
+
+  @debounce(100)
+  mouseoverFile(item) {
+    this.cursor = {
+      isFile: true,
+      file: item
+    };
+  }
+
+  onContextMenuHide() {
+    this.cursor = {
+      isFile: false,
+      file: null
+    };
   }
 
   async initProject() {
@@ -55,10 +90,46 @@ export default class FileManager extends Vue {
     await this.writeFiles(this.defaultFiles);
   }
 
+  async createNewFile() {
+    //@ts-ignore
+    this.$refs.createFileForm.validate(async valid => {
+      if (!valid) return;
+      const { name } = this.createFileForm;
+      const { curDir } = this;
+      const fileName = name.replace(".sol", "") + ".sol";
+      await this.writeFile({ path: `${curDir}/${fileName}`, content: "" });
+      this.loadFiles();
+
+      this.createFileForm = {
+        ...this.createFileForm,
+        visible: false,
+        name: ""
+      };
+    });
+  }
+
+  async deleteFile() {
+    const { file } = this.cursor;
+    if (!file) return;
+
+    const [err] = await Helper.runAsync(
+      this.$msgbox({
+        title: "Delete a file",
+        message: "Are you sure you want to delete this file?",
+        showCancelButton: true,
+        confirmButtonText: "OK"
+      })
+    );
+    if (err) return;
+
+    await fs.promises.unlink(file.path);
+    await this.loadFiles();
+  }
+
   async loadFiles() {
     const { curDir } = this;
     const files = await this.fileManager.list(curDir);
-    this.files = files;
+    this.files = _.orderBy(files, "name", "asc");
     this.curFilePath = localStorage.getItem("curFilePath") || files[0].path;
   }
 
@@ -75,6 +146,18 @@ export default class FileManager extends Vue {
   @Watch("curFilePath")
   oncurFilePathChange() {
     localStorage.setItem("curFilePath", this.curFilePath);
+  }
+
+  async created() {
+    eventBus.on("editor.init", async () => {
+      await this.initProject();
+      await this.loadFiles();
+    });
+
+    eventBus.on("editor.content.update", async content => {
+      this.files[this.curFileIndex].content = content;
+      await this.writeFile({ path: this.curFilePath, content });
+    });
   }
 }
 </script>

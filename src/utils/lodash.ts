@@ -7,6 +7,7 @@ import range from "lodash/range";
 import omitBy from "lodash/omitBy";
 import omit from "lodash/omit";
 import pick from "lodash/pick";
+import orderBy from "lodash/orderBy";
 
 import isNil from "lodash/isNil";
 import compact from "lodash/compact";
@@ -24,5 +25,6 @@ export const _ = {
   compact,
   omit,
   pick,
-  cloneDeep
+  cloneDeep,
+  orderBy
 };

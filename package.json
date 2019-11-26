@@ -24,6 +24,7 @@
     "ethers": "^4.0.39",
     "express": "^4.17.1",
     "fs.promises": "^0.1.2",
+    "helpful-decorators": "^2.0.5",
     "isomorphic-git": "^0.70.8",
     "lodash": "^4.17.15",
     "solc-js": "^1.0.1",

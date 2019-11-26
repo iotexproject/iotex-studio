@@ -40,6 +40,7 @@ export default class Compiler extends Vue {
 
     await Promise.all(
       this.files.map(async file => {
+        if (!file.content.includes("contract")) return;
         const [errs, result] = await Helper.runAsync(this.solc.compiler(file.content));
         const compileResult = _.keyBy(result, "name");
         if (errs) {
