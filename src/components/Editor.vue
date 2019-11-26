@@ -40,6 +40,7 @@ export default class Editor extends Vue {
     const { lang, theme, options, curFilePath } = this;
     const editor = (this.editor = ace.edit(this.$el as HTMLElement));
     editor.$blockScrolling = Infinity;
+    editor.setShowPrintMargin(false);
 
     this.$emit("init", editor);
     eventBus.emit("editor.init", editor);

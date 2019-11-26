@@ -37,7 +37,6 @@ export default class Compiler extends Vue {
     this.solc = { ...this.solc, ...{ compileLoading: true } };
     let _errs = [];
     let _result = {};
-    this.solc = { ...this.solc, ...{ compileLoading: false } };
 
     await Promise.all(
       this.files.map(async file => {
@@ -53,20 +52,31 @@ export default class Compiler extends Vue {
 
     this.editor.session.clearAnnotations();
     if (_errs.length > 0) {
-      this.editor.session.setAnnotations(
-        _errs.map(err => {
-          const [m] = err.formattedMessage.match(/\d+:\d+/);
-          const [row, column] = m.split(":");
+      const errs = _errs.map(err => {
+        const [m] = err.formattedMessage.match(/\d+:\d+/);
+        const [row, column] = m.split(":");
+        return {
+          type: "error",
+          text: err.formattedMessage,
+          row: row - 1,
+          column
+        };
+      });
+      eventBus.emit(
+        "term.messages",
+        errs.map(i => {
+          const { text, type } = i;
           return {
+            component: "alert",
             type: "error",
-            text: err.formattedMessage,
-            row: row - 1,
-            column
+            text
           };
         })
       );
+      this.editor.session.setAnnotations(errs);
       return;
     }
+    this.solc = { ...this.solc, ...{ compileLoading: false } };
     console.log(_result);
     this.solc = { ...this.solc, ...{ compileResult: _result, currentContract: Object.keys(_result)[0] } };
     eventBus.emit("solc.compiled", _result);

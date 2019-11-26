@@ -1,5 +1,13 @@
 import ace from "brace";
 
+export interface StdoutType {
+  text: string;
+  component?: "alert" | "json";
+  data?: Object;
+  type?: "success" | "info" | "warning" | "error";
+  description?: string;
+}
+
 export interface EditorStore {
   fileManager: {
     curDir: string;

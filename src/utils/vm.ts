@@ -5,6 +5,7 @@ import { promisify } from "util";
 import * as util from "ethereumjs-util";
 import Account from "ethereumjs-account";
 import { Wallet, utils } from "ethers";
+import { eventBus } from "./eventBus";
 
 export class JSVM {
   vm = new VM();
@@ -92,6 +93,7 @@ export class JSVM {
     const params = abi.rawEncode(types, datas);
     const nonce = await this.getAccountNonce(senderPrivateKey);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
+
     const tx = new Transaction({
       to: contractAddress,
       value,
@@ -103,6 +105,9 @@ export class JSVM {
 
     tx.sign(senderPrivateKey);
     const result = await this.vm.runTx({ tx });
+    eventBus.emit("term.message", {
+      text: `call from: ${tx.getSenderAddress().toString("hex")} to:${tx.to.toString("hex")} data:${tx.data.toString("hex")} `
+    });
 
     if (result.execResult.exceptionError) {
       throw result.execResult.exceptionError;

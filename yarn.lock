@@ -9614,6 +9614,16 @@ xtend@~2.1.1:
   dependencies:
     object-keys "~0.4.0"
 
+xterm-addon-fit@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npm.taobao.org/xterm-addon-fit/download/xterm-addon-fit-0.3.0.tgz#341710741027de9d648a9f84415a01ddfdbbe715"
+  integrity sha1-NBcQdBAn3p1kip+EQVoB3f275xU=
+
+xterm-addon-web-links@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.npm.taobao.org/xterm-addon-web-links/download/xterm-addon-web-links-0.2.1.tgz#6d1f2ce613e09870badf17615e7a1170a31542b2"
+  integrity sha1-bR8s5hPgmHC63xdhXnoRcKMVQrI=
+
 "y18n@^3.2.1 || ^4.0.0", y18n@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npm.taobao.org/y18n/download/y18n-4.0.0.tgz#95ef94f85ecc81d007c264e190a120f0a3c8566b"

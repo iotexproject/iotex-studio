@@ -50,6 +50,7 @@ import { utils } from "ethers";
 import abi from "ethereumjs-abi";
 import path from "path";
 import { defaultTypeValue } from "../utils/constant";
+import { Helper } from "../utils/helper";
 
 @Component
 export default class Deployer extends Vue {
@@ -95,6 +96,7 @@ export default class Deployer extends Vue {
     const { inputs = [], datas: _datas = "" } = this.cstr.cstr || {};
     let { gasLimit } = this.form;
     const { value } = this;
+    const senderPrivateKey = new Buffer(privateKey, "hex");
 
     const types = inputs.map(i => i.type);
     const datas = _datas ? _datas.split(/,(?![^(]*\)) /) : [];
@@ -104,9 +106,14 @@ export default class Deployer extends Vue {
       }
     });
 
-    console.debug({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: Buffer.from(bytecode, "hex"), types, datas, value, gasLimit });
-    const address = await jsvm.deplyContract({ senderPrivateKey: new Buffer(privateKey, "hex"), bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+    console.debug({ senderPrivateKey, bytecode: Buffer.from(bytecode, "hex"), types, datas, value, gasLimit });
+    const address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
 
+    eventBus.emit("term.message", {
+      component: "alert",
+      type: "success",
+      text: `Deploy Contract: ${name}, \n Address: ${address}`
+    });
     this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), visible: false });
     this.reloadAccounts();
   }
@@ -117,6 +124,8 @@ export default class Deployer extends Vue {
     const { inputs, outputs } = func;
     let { gasLimit } = this.form;
     const { value } = this;
+    const { name: method } = func;
+    const senderPrivateKey = new Buffer(privateKey, "hex");
 
     const types = inputs.map(i => i.type);
     const outputTypes = outputs.map(i => i.type);
@@ -127,21 +136,32 @@ export default class Deployer extends Vue {
       }
     });
 
-    console.log({ method: func.name, senderPrivateKey: new Buffer(privateKey, "hex"), contractAddress: util.toBuffer(address), types, datas, value, gasLimit });
-    const result = await jsvm.interactContract({
-      method: func.name,
-      senderPrivateKey: new Buffer(privateKey, "hex"),
-      contractAddress: util.toBuffer(address),
-      types,
-      datas,
-      value,
-      gasLimit
-    });
+    console.log({ method, senderPrivateKey, contractAddress: util.toBuffer(address), types, datas, value, gasLimit });
+    const [err, result] = await Helper.runAsync(
+      jsvm.interactContract({
+        method,
+        senderPrivateKey,
+        contractAddress: util.toBuffer(address),
+        types,
+        datas,
+        value,
+        gasLimit
+      })
+    );
+    if (err) {
+      console.error({ err });
+      return eventBus.emit("term.message", {
+        component: "alert",
+        type: "error",
+        text: `call to ${contract.name}.${method} errored: ${err.errorType}: ${err.error}`
+      });
+    }
 
+    const results = abi.rawDecode(outputTypes, result.execResult.returnValue);
     if (outputTypes.length > 0) {
-      const results = abi.rawDecode(outputTypes, result.execResult.returnValue);
       func.results = results;
     }
+
     this.reloadAccounts();
   }
 
