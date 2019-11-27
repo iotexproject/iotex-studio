@@ -6,13 +6,13 @@
           el-option(v-for="item in solc.versions.releases" :key="item" :label="item" :value="item")
       div.mt-2.w-full
         el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile
-      .contract.mt-4(v-if="solc.currentContract")
-        //- el-form-item(label="Contract")
-        //-   el-select(v-model="solc.currentContract")
-        //-     el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item")
+      .contract.mt-4(v-if="currentContractName")
+        el-form-item(label="Contract")
+          el-select(v-model="currentContractName")
+            el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item")
         div.flex.justify-end
-          el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(solc, 'currentContract.abi')") ABI
-          el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(solc, 'currentContract.binary')") Bytecode
+          el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(currentContract, 'abi')") ABI
+          el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(currentContract, 'binary')") Bytecode
 
 </template>
 
@@ -31,6 +31,8 @@ export default class Compiler extends Vue {
   @Sync("editor/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
+
+  currentContractName: string = null;
 
   async compile() {
     if (!this.solc.compiler) return;
@@ -79,7 +81,8 @@ export default class Compiler extends Vue {
     }
     this.solc = { ...this.solc, ...{ compileLoading: false } };
     console.log(_result);
-    this.solc = { ...this.solc, ...{ compileResult: _result, currentContract: Object.keys(_result)[0] } };
+    this.solc = { ...this.solc, ...{ compileResult: _result } };
+    this.currentContractName = Object.keys(_result)[0];
     eventBus.emit("solc.compiled", _result);
   }
 
@@ -91,16 +94,20 @@ export default class Compiler extends Vue {
   }
 
   async copyAbi() {
-    const abi = _.get(this.solc, "currentContract.abi");
+    const abi = _.get(this.currentContract, "abi");
     const abiString = JSON.stringify(abi);
     await this.$copyText(abiString);
     this.$message.success("Copied value to clipboard");
   }
 
   async copyBytecode() {
-    const bytecode = _.get(this.solc, "currentContract.binary.bytecodes.bytecode");
+    const bytecode = _.get(this.currentContract, "binary.bytecodes.bytecode");
     await this.$copyText(bytecode);
     this.$message.success("Copied value to clipboard");
+  }
+
+  get currentContract() {
+    return this.solc.compileResult[this.currentContractName];
   }
 
   @Watch("solc.version")
