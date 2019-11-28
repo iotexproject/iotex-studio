@@ -51,30 +51,22 @@ import abi from "ethereumjs-abi";
 import path from "path";
 import { defaultTypeValue } from "../utils/constant";
 import { Helper } from "../utils/helper";
+import { wsSigner, antenna } from "../utils/antenna";
+import { toRau } from "iotex-antenna/lib/account/utils";
 
 @Component
 export default class Deployer extends Vue {
   @Sync("editor/solc") solc: EditorStore["solc"];
   accounts: {
     address: string;
-    addressBuffer: Buffer;
-    privateKey: string;
-    privateKeyBuffer: Buffer;
-    account: any;
+    addressBuffer?: Buffer;
+    privateKey?: string;
+    privateKeyBuffer?: Buffer;
+    account?: any;
   }[] = [];
   deployForm = {
     constructorInput: null
   };
-
-  form = {
-    gasLimit: 3000000,
-    value: 0,
-    valueType: "wei"
-  };
-  valueTypes = ["wei", "gwei", "finney", "ether"];
-  accountIndex = 0;
-  contracts: any = {};
-  currentContractName: string = null;
   deployedContracts: {
     [key: string]: {
       name: string;
@@ -84,14 +76,27 @@ export default class Deployer extends Vue {
     };
   } = {};
 
-  environments = ["JavaScript VM"];
-  currentEnvironment = "JavaScript VM";
+  form = {
+    gasLimit: 3000000,
+    gasPrice: 1,
+    value: 0,
+    valueType: "wei"
+  };
+  valueTypes = ["wei", "gwei", "finney", "ether"];
+  accountIndex = 0;
+
+  contracts: any = {};
+  currentContractName: string = null;
+
+  environment: "JavaScript VM" | "Injencted ioPay";
+  environments: Deployer["environment"][] = ["JavaScript VM", "Injencted ioPay"];
+  currentEnvironment: Deployer["environment"] = "JavaScript VM";
 
   async deployContract() {
-    const { privateKey } = this.account;
-    const { bytecode, name, abi } = this.currentContract;
+    const { privateKey = "", address: callerAddress } = this.account;
+    const { bytecode, name, abiRaw, abi } = this.currentContract;
     const { constructorInput } = this.deployForm;
-    let { gasLimit } = this.form;
+    let { gasLimit, gasPrice } = this.form;
     const { value } = this;
     const senderPrivateKey = new Buffer(privateKey, "hex");
     const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
@@ -104,8 +109,22 @@ export default class Deployer extends Vue {
       }
     });
 
-    console.debug({ senderPrivateKey, bytecode: Buffer.from(bytecode, "hex"), types, datas, value, gasLimit });
-    const address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+    let address;
+    switch (this.currentEnvironment) {
+      case "JavaScript VM":
+        console.debug({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+
+        address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+        break;
+      case "Injencted ioPay":
+        console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
+
+        address = await antenna.iotx.deployContract(
+          { from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
+          ...datas
+        );
+        break;
+    }
 
     eventBus.emit("term.message", {
       component: "alert",
@@ -172,9 +191,11 @@ export default class Deployer extends Vue {
   }
 
   reloadAccounts() {
-    this.accounts.forEach(async (o, i) => {
-      this.accounts[i].account = await jsvm.vm.pStateManager.getAccount(o.addressBuffer);
-    });
+    if ((this.environment = "JavaScript VM")) {
+      this.accounts.forEach(async (o, i) => {
+        this.accounts[i].account = await jsvm.vm.pStateManager.getAccount(o.addressBuffer);
+      });
+    }
   }
 
   deleteContract(contract) {
@@ -182,17 +203,31 @@ export default class Deployer extends Vue {
     this.$delete(this.deployedContracts, contract.address);
   }
 
-  async genAccounts() {
-    this.accounts = await Promise.all(_.range(0, 4).map(() => jsvm.generateAccount()));
-  }
-
   accountLabel(item) {
+    if (!item.account) return item.address;
     return `${truncate(item.address, 12, "...")} ${utils.formatEther(item.account.balance)} ether`;
   }
 
   parseInputs(item) {
     if (item.inputs.length == 0) return null;
     return item.inputs.map(input => `${input.name} ${input.type}`);
+  }
+
+  async initJSVM() {
+    this.accounts = await Promise.all(_.range(0, 4).map(() => jsvm.generateAccount()));
+  }
+
+  async initAntenna() {
+    const [err, accounts] = await Helper.runAsync(wsSigner.getAccounts());
+    if (err) {
+      return eventBus.emit("term.message", {
+        component: "alert",
+        type: "error",
+        text: err
+      });
+    }
+
+    this.accounts = accounts;
   }
 
   get value() {
@@ -216,14 +251,24 @@ export default class Deployer extends Vue {
     };
   }
 
+  @Watch("currentEnvironment")
+  onEnvironmentChange() {
+    switch (this.currentEnvironment) {
+      case "JavaScript VM":
+        return this.initJSVM();
+      case "Injencted ioPay":
+        return this.initAntenna();
+    }
+  }
+
   created() {
-    this.genAccounts();
+    this.initJSVM();
     eventBus.on("solc.compiled", result => {
       _.each(result, (v, k) => {
         const { name } = v;
         const abi = _.groupBy(v.abi, "type");
         const bytecode = _.get(v, "binary.bytecodes.bytecode");
-        this.contracts[k] = { name, abi, bytecode };
+        this.contracts[k] = { name, abi, abiRaw: v.abi, bytecode };
         if (!this.currentContract) {
           this.currentContractName = this.contracts[k].name;
         }

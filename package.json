@@ -27,6 +27,7 @@
     "helpful-decorators": "^2.0.5",
     "iotex-antenna": "^0.26.0",
     "isomorphic-git": "^0.70.8",
+    "isomorphic-ws": "^4.0.1",
     "lodash": "^4.17.15",
     "solc-js": "^1.0.1",
     "string_decoder": "^1.3.0",
