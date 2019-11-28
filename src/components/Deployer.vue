@@ -19,7 +19,7 @@
           el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
-          el-input(:placeholder="cstr.placeholder" v-if="cstr.placeholder"  v-model="cstr.cstr.datas")
+          el-input(:placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))" v-if="$_.get(currentContract, 'abi.constructor.0')"  v-model="deployForm.constructorInput")
       .deplyed-contracts.mt-6.text-sm
         .flex.mb-2.text-sm.text-gray-800.font-bold Deployed Contracts
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
@@ -38,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Watch } from "vue-property-decorator";
 import { Sync } from "vuex-pathify";
 import { EditorStore } from "../store/type";
 import { eventBus } from "../utils/eventBus";
@@ -62,6 +62,9 @@ export default class Deployer extends Vue {
     privateKeyBuffer: Buffer;
     account: any;
   }[] = [];
+  deployForm = {
+    constructorInput: null
+  };
 
   form = {
     gasLimit: 3000000,
@@ -70,10 +73,8 @@ export default class Deployer extends Vue {
   };
   valueTypes = ["wei", "gwei", "finney", "ether"];
   accountIndex = 0;
-
   contracts: any = {};
   currentContractName: string = null;
-
   deployedContracts: {
     [key: string]: {
       name: string;
@@ -86,20 +87,17 @@ export default class Deployer extends Vue {
   environments = ["JavaScript VM"];
   currentEnvironment = "JavaScript VM";
 
-  get currentContract() {
-    return this.contracts[this.currentContractName];
-  }
-
   async deployContract() {
     const { privateKey } = this.account;
     const { bytecode, name, abi } = this.currentContract;
-    const { inputs = [], datas: _datas = "" } = this.cstr.cstr || {};
+    const { constructorInput } = this.deployForm;
     let { gasLimit } = this.form;
     const { value } = this;
     const senderPrivateKey = new Buffer(privateKey, "hex");
+    const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
 
     const types = inputs.map(i => i.type);
-    const datas = _datas ? _datas.split(/,(?![^(]*\)) /) : [];
+    const datas = constructorInput ? constructorInput.split(/,(?![^(]*\)) /) : [];
     types.forEach((o, i) => {
       if (!datas[i]) {
         datas[i] = defaultTypeValue[o];
@@ -119,9 +117,9 @@ export default class Deployer extends Vue {
   }
 
   async interactContract({ func, contract }) {
-    const { privateKey } = this.account;
-    const { address } = contract;
-    const { inputs, outputs } = func;
+    const { privateKey, address: callerAddress } = this.account;
+    const { address: contractAddress } = contract;
+    const { inputs, outputs, stateMutability } = func;
     let { gasLimit } = this.form;
     const { value } = this;
     const { name: method } = func;
@@ -135,19 +133,27 @@ export default class Deployer extends Vue {
         datas[i] = defaultTypeValue[o];
       }
     });
+    const callFunc =
+      stateMutability == "view"
+        ? jsvm.readContract({
+            method,
+            contractAddress,
+            callerAddress,
+            types,
+            datas
+          })
+        : jsvm.interactContract({
+            method,
+            senderPrivateKey,
+            contractAddress,
+            types,
+            datas,
+            value,
+            gasLimit
+          });
 
-    console.log({ method, senderPrivateKey, contractAddress: util.toBuffer(address), types, datas, value, gasLimit });
-    const [err, result] = await Helper.runAsync(
-      jsvm.interactContract({
-        method,
-        senderPrivateKey,
-        contractAddress: util.toBuffer(address),
-        types,
-        datas,
-        value,
-        gasLimit
-      })
-    );
+    console.log({ method, senderPrivateKey, callerAddress, contractAddress: util.toBuffer(contractAddress), types, datas, value, gasLimit });
+    const [err, result] = await Helper.runAsync(callFunc);
     if (err) {
       console.error({ err });
       return eventBus.emit("term.message", {
@@ -199,13 +205,14 @@ export default class Deployer extends Vue {
     return this.accounts[this.accountIndex];
   }
 
-  get cstr() {
-    const cstr = _.get(this.currentContract, "abi.constructor.0");
-    const inputs = _.get(cstr, "inputs");
-    const placeholder = inputs && inputs.length > 0 ? cstr.inputs.map(input => ` ${input.name} ${input.type}`) : null;
-    return {
-      cstr,
-      placeholder
+  get currentContract() {
+    return this.contracts[this.currentContractName];
+  }
+
+  @Watch("currentContractName")
+  onContractChange() {
+    this.deployForm = {
+      constructorInput: null
     };
   }
 

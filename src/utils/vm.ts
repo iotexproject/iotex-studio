@@ -71,6 +71,29 @@ export class JSVM {
     return util.bufferToHex(deploymentResult.createdAddress);
   }
 
+  async readContract({ contractAddress, callerAddress, types, datas, method }: { method: string; contractAddress: string; callerAddress: string; types?: string[]; datas?: string[] }) {
+    const params = abi.rawEncode(types, datas);
+    let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
+
+    const _contractAddress = util.toBuffer(contractAddress);
+    const _callerAddress = util.toBuffer(callerAddress);
+    const result = await this.vm.runCall({
+      to: _contractAddress,
+      caller: _callerAddress,
+      origin: _callerAddress,
+      data: util.toBuffer(data)
+    });
+
+    eventBus.emit("term.message", {
+      text: `call from: ${callerAddress} to:${contractAddress} data:${data} `
+    });
+
+    if (result.execResult.exceptionError) {
+      throw result.execResult.exceptionError;
+    }
+    return result;
+  }
+
   async interactContract({
     gasLimit = 2000000,
     gasPrice = 1,
@@ -83,7 +106,7 @@ export class JSVM {
   }: {
     method: string;
     senderPrivateKey: Buffer;
-    contractAddress: Buffer;
+    contractAddress: string;
     types?: string[];
     datas?: string[];
     gasLimit?: number;
@@ -93,9 +116,10 @@ export class JSVM {
     const params = abi.rawEncode(types, datas);
     const nonce = await this.getAccountNonce(senderPrivateKey);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
+    const _contractAddress = util.toBuffer(contractAddress);
 
     const tx = new Transaction({
-      to: contractAddress,
+      to: _contractAddress,
       value,
       gasLimit,
       gasPrice,
