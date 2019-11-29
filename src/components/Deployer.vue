@@ -17,9 +17,13 @@
       .contract.mt-4
         el-select.w-full(v-model="currentContractName")
           el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
+        
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
           el-input(:placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))" v-if="$_.get(currentContract, 'abi.constructor.0')"  v-model="deployForm.constructorInput")
+        .flex.mt-4(v-if="currentContract")
+          el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress") At Address
+          el-input(placeholder="Loadd contract from Address"  v-model="deployForm.atContractInput")
       .deplyed-contracts.mt-6.text-sm
         .flex.mb-2.text-sm.text-gray-800.font-bold Deployed Contracts
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
@@ -53,6 +57,7 @@ import { defaultTypeValue } from "../utils/constant";
 import { Helper } from "../utils/helper";
 import { wsSigner, antenna } from "../utils/antenna";
 import { toRau } from "iotex-antenna/lib/account/utils";
+import retryPromise from "promise-retry";
 
 @Component
 export default class Deployer extends Vue {
@@ -65,7 +70,8 @@ export default class Deployer extends Vue {
     account?: any;
   }[] = [];
   deployForm = {
-    constructorInput: null
+    constructorInput: null,
+    atContractInput: null
   };
   deployedContracts: {
     [key: string]: {
@@ -92,102 +98,164 @@ export default class Deployer extends Vue {
   environments: Deployer["environment"][] = ["JavaScript VM", "Injencted ioPay"];
   currentEnvironment: Deployer["environment"] = "JavaScript VM";
 
-  async deployContract() {
-    const { privateKey = "", address: callerAddress } = this.account;
-    const { bytecode, name, abiRaw, abi } = this.currentContract;
-    const { constructorInput } = this.deployForm;
-    let { gasLimit, gasPrice } = this.form;
-    const { value } = this;
-    const senderPrivateKey = new Buffer(privateKey, "hex");
-    const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
+  async deployContractFromAddress() {
+    try {
+      const { atContractInput: address } = this.deployForm;
+      const { bytecode, name, abiRaw, abi } = this.currentContract;
 
-    const types = inputs.map(i => i.type);
-    const datas = constructorInput ? constructorInput.split(/,(?![^(]*\)) /) : [];
-    types.forEach((o, i) => {
-      if (!datas[i]) {
-        datas[i] = defaultTypeValue[o];
-      }
-    });
-
-    let address;
-    switch (this.currentEnvironment) {
-      case "JavaScript VM":
-        console.debug({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
-
-        address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
-        break;
-      case "Injencted ioPay":
-        console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
-
-        address = await antenna.iotx.deployContract(
-          { from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
-          ...datas
-        );
-        break;
+      this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false });
+    } catch (error) {
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
     }
+  }
 
-    eventBus.emit("term.message", {
-      component: "alert",
-      type: "success",
-      text: `Deploy Contract: ${name}, \n Address: ${address}`
-    });
-    this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), visible: false });
-    this.reloadAccounts();
+  async deployContract() {
+    try {
+      const { privateKey = "", address: callerAddress } = this.account;
+      const { bytecode, name, abiRaw, abi } = this.currentContract;
+      const { constructorInput } = this.deployForm;
+      let { gasLimit, gasPrice } = this.form;
+      const { value } = this;
+      const senderPrivateKey = new Buffer(privateKey, "hex");
+      const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
+
+      const types = inputs.map(i => i.type);
+      const datas = constructorInput ? constructorInput.split(/,(?![^(]*\)) /) : [];
+      types.forEach((o, i) => {
+        if (!datas[i]) {
+          datas[i] = defaultTypeValue[o];
+        }
+      });
+
+      let address, actionHash;
+      switch (this.currentEnvironment) {
+        case "JavaScript VM":
+          console.debug({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+
+          address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
+          break;
+        case "Injencted ioPay":
+          console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
+
+          actionHash = await antenna.iotx.deployContract(
+            { from: callerAddress, amount: String(value), data: Buffer.from(bytecode, "hex"), abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
+            ...datas
+          );
+          break;
+      }
+
+      if (actionHash) {
+        eventBus.emit("term.message", { text: `Deploy Contract: ${name}, actionHash: ${actionHash}` });
+        await retryPromise((retry, number) => antenna.iotx.getReceiptByAction({ actionHash }).catch(retry), { retries: 3, minTimeout: 10000, maxTimeout: 10000 }).then(
+          async value => {
+            address = value.receiptInfo.receipt.contractAddress;
+          },
+          async err => {
+            eventBus.emit("term.message", { text: `Failed to check action receipt ${err}` });
+          }
+        );
+      }
+
+      if (address) {
+        eventBus.emit("term.message", {
+          component: "alert",
+          type: "success",
+          text: `Deploy Contract: ${name}, \n Address: ${address}`
+        });
+        this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false });
+        this.reloadAccounts();
+      }
+    } catch (error) {
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+    }
   }
 
   async interactContract({ func, contract }) {
-    const { privateKey, address: callerAddress } = this.account;
-    const { address: contractAddress } = contract;
-    const { inputs, outputs, stateMutability } = func;
-    let { gasLimit } = this.form;
-    const { value } = this;
-    const { name: method } = func;
-    const senderPrivateKey = new Buffer(privateKey, "hex");
+    try {
+      const { privateKey = "", address: callerAddress } = this.account;
+      const { address: contractAddress, abiRaw } = contract;
+      const { inputs, outputs, stateMutability } = func;
+      let { gasLimit, gasPrice } = this.form;
+      const { value } = this;
+      const { name: method } = func;
 
-    const types = inputs.map(i => i.type);
-    const outputTypes = outputs.map(i => i.type);
-    const datas = func.datas ? func.datas.split(",") : [];
-    types.forEach((o, i) => {
-      if (!datas[i]) {
-        datas[i] = defaultTypeValue[o];
-      }
-    });
-    const callFunc =
-      stateMutability == "view"
-        ? jsvm.readContract({
-            method,
-            contractAddress,
-            callerAddress,
-            types,
-            datas
-          })
-        : jsvm.interactContract({
-            method,
-            senderPrivateKey,
-            contractAddress,
-            types,
-            datas,
-            value,
-            gasLimit
-          });
-
-    console.log({ method, senderPrivateKey, callerAddress, contractAddress: util.toBuffer(contractAddress), types, datas, value, gasLimit });
-    const [err, result] = await Helper.runAsync(callFunc);
-    if (err) {
-      console.error({ err });
-      return eventBus.emit("term.message", {
-        component: "alert",
-        type: "error",
-        text: `call to ${contract.name}.${method} errored: ${err.errorType}: ${err.error}`
+      const types = inputs.map(i => i.type);
+      const outputTypes = outputs.map(i => i.type);
+      const datas = func.datas ? func.datas.split(",") : [];
+      types.forEach((o, i) => {
+        if (!datas[i]) {
+          datas[i] = defaultTypeValue[o];
+        }
       });
-    }
+      let callFunc, err, result;
 
-    const results = abi.rawDecode(outputTypes, result.execResult.returnValue);
-    if (outputTypes.length > 0) {
-      func.results = results;
-    }
+      const isReadFunc = stateMutability == "view";
 
-    this.reloadAccounts();
+      switch (this.currentEnvironment) {
+        case "JavaScript VM":
+          const senderPrivateKey = new Buffer(privateKey, "hex");
+
+          callFunc = isReadFunc
+            ? jsvm.readContract({
+                method,
+                contractAddress,
+                callerAddress,
+                types,
+                datas
+              })
+            : jsvm.interactContract({
+                method,
+                senderPrivateKey,
+                contractAddress,
+                types,
+                datas,
+                value,
+                gasLimit
+              });
+
+          console.log({ method, senderPrivateKey, callerAddress, contractAddress: util.toBuffer(contractAddress), types, datas, value, gasLimit });
+          [err, result] = await Helper.runAsync(callFunc);
+          if (err) {
+            console.error({ err });
+            return eventBus.emit("term.message", {
+              component: "alert",
+              type: "error",
+              text: `call to ${contract.name}.${method} errored: ${err.errorType}: ${err.error}`
+            });
+          }
+
+          const results = abi.rawDecode(outputTypes, result.execResult.returnValue);
+          if (outputTypes.length > 0) {
+            func.results = results;
+          }
+          this.reloadAccounts();
+          break;
+        case "Injencted ioPay":
+          console.log({ abi: JSON.stringify(abiRaw), from: callerAddress, method, contractAddress, gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
+
+          callFunc = isReadFunc
+            ? antenna.iotx.readContractByMethod(
+                { abi: JSON.stringify(abiRaw), from: callerAddress, method, contractAddress, gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
+                ...datas
+              )
+            : antenna.iotx.executeContract(
+                { amount: String(value), abi: JSON.stringify(abiRaw), from: callerAddress, method, contractAddress, gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
+                ...datas
+              );
+
+          [err, result] = await Helper.runAsync(callFunc);
+
+          if (err) {
+            console.error({ err });
+          }
+          if (result && isReadFunc) {
+            this.$set(func, "results", [result.toString()]);
+          }
+          break;
+      }
+    } catch (error) {
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+    }
   }
 
   reloadAccounts() {
@@ -247,7 +315,8 @@ export default class Deployer extends Vue {
   @Watch("currentContractName")
   onContractChange() {
     this.deployForm = {
-      constructorInput: null
+      constructorInput: null,
+      atContractInput: null
     };
   }
 

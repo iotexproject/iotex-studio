@@ -1,23 +1,23 @@
 // @ts-ignore
 import window from "global/window";
-import WebSocket from "isomorphic-ws";
+import WebSocket from "websocket-as-promised";
 import { Account } from "iotex-antenna/lib/account/account";
 import { Envelop } from "iotex-antenna/lib/action/envelop";
 import { SignerPlugin } from "iotex-antenna/lib/action/method";
-
-// tslint:disable-next-line:insecure-random
-let reqId = Math.round(Math.random() * 10000);
+import Options from "websocket-as-promised/types/options";
+import { PromiseHelper } from "./index";
+import { eventBus } from "./eventBus";
 
 interface IRequest {
-  reqId: number;
+  reqId?: number;
   type: "SIGN_AND_SEND" | "GET_ACCOUNTS";
   envelop?: string; // serialized proto string
   origin?: string;
 }
 
-export interface WsSignerPluginOptions {
-  retryCount: number;
-  retryDuration: number;
+export interface WsSignerPluginOptions extends Options {
+  retryCount?: number;
+  retryDuration?: number;
 }
 
 export interface WsRequest {
@@ -32,7 +32,7 @@ export class WsSignerPlugin implements SignerPlugin {
 
   private readonly options: WsSignerPluginOptions;
 
-  constructor(provider: string = "wss://local.get-scatter.com:64102", options: WsSignerPluginOptions = { retryCount: 3, retryDuration: 50 }) {
+  constructor({ provider = "wss://local.get-scatter.com:64102", options = { retryCount: 3, retryDuration: 50 } }: { provider?: string; options: WsSignerPluginOptions }) {
     this.provider = provider;
 
     this.options = options;
@@ -40,77 +40,37 @@ export class WsSignerPlugin implements SignerPlugin {
     this.init();
   }
 
-  private init(): void {
-    this.ws = new WebSocket(this.provider);
-    this.ws.onopen = (): void => {
-      window.console.log("[antenna-ws] connected");
+  private async init() {
+    this.ws = new WebSocket(this.provider, this.options);
+    this.ws.onOpen.addListener(() => {
+      eventBus.emit("term.message", { text: "[antenna-ws] connected" });
+    });
+    this.ws.onClose.addListener = () => {
+      eventBus.emit("term.message", { text: "[antenna-ws] disconnected" });
     };
-    this.ws.onclose = (): void => {
-      window.console.log("[antenna-ws] disconnected");
-    };
+    await this.ws.open();
+    return this;
   }
 
-  private send(req: WsRequest): void {
-    const readyState = this.ws.readyState;
-
-    if (readyState === 1) {
-      this.ws.send(JSON.stringify(req));
-    } else {
-      if (readyState === 2 || readyState === 3) {
-        this.init();
-      }
-      this.reconnectAndSend(this.options.retryCount, req);
+  private async wait() {
+    while (!this.ws.isOpened) {
+      await PromiseHelper.sleep(500);
+      if (!this.ws.isOpened) await this.init();
     }
-  }
-
-  private reconnectAndSend(retryCount: number, req: WsRequest, timeoutId?: number): void {
-    const readyState = this.ws.readyState;
-
-    if (timeoutId) {
-      window.clearTimeout(timeoutId);
-    }
-
-    if (retryCount > 0) {
-      const id = window.setTimeout(() => {
-        if (readyState === 1) {
-          this.ws.send(JSON.stringify(req));
-          window.clearTimeout(id);
-        } else {
-          const count = retryCount - 1;
-          this.reconnectAndSend(count, req, id);
-        }
-      }, this.options.retryDuration);
-    } else {
-      window.console.error("ws plugin connect error, please retry again later.");
-    }
+    return Promise.resolve(true);
   }
 
   public async signAndSend(envelop: Envelop): Promise<string> {
-    const id = reqId++;
+    await this.wait();
+    const envelopString = Buffer.from(envelop.bytestream()).toString("hex");
+
     const req: IRequest = {
-      reqId: id,
-      envelop: Buffer.from(envelop.bytestream()).toString("hex"),
+      envelop: envelopString,
       type: "SIGN_AND_SEND",
       origin: this.getOrigin()
     };
-    console.log(req);
-    this.send(req);
-    // tslint:disable-next-line:promise-must-complete
-    return new Promise<string>(resolve => {
-      this.ws.onmessage = event => {
-        let resp = { reqId: -1, actionHash: "" };
-        try {
-          if (typeof event.data === "string") {
-            resp = JSON.parse(event.data);
-          }
-        } catch (_) {
-          return;
-        }
-        if (resp.reqId === id) {
-          resolve(resp.actionHash);
-        }
-      };
-    });
+    const res = await this.ws.sendRequest(req);
+    return res.actionHash;
   }
 
   public async getAccount(address: string): Promise<Account> {
@@ -120,28 +80,12 @@ export class WsSignerPlugin implements SignerPlugin {
   }
 
   public async getAccounts(): Promise<Array<Account>> {
-    const id = reqId++;
+    await this.wait();
     const req = {
-      reqId: id,
       type: "GET_ACCOUNTS"
     };
-    this.send(req);
-    // tslint:disable-next-line:promise-must-complete
-    return new Promise<Array<Account>>(resolve => {
-      this.ws.onmessage = event => {
-        let resp = { reqId: -1, accounts: [] };
-        try {
-          if (typeof event.data === "string") {
-            resp = JSON.parse(event.data);
-          }
-        } catch (_) {
-          return;
-        }
-        if (resp.reqId === id) {
-          resolve(resp.accounts);
-        }
-      };
-    });
+    const res = await this.ws.sendRequest(req);
+    return res.accounts;
   }
 
   public getOrigin(plugin: string = ""): string {
