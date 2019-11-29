@@ -9,7 +9,7 @@
       .contract.mt-4(v-if="currentContractName")
         el-form-item(label="Contract")
           el-select(v-model="currentContractName")
-            el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item")
+            el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item.name")
         div.flex.justify-end
           el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(currentContract, 'abi')") ABI
           el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(currentContract, 'binary')") Bytecode
@@ -18,12 +18,14 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Sync } from "vuex-pathify";
+import { Sync, Get } from "vuex-pathify";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
 import { EditorStore } from "../store/type";
+import { SolcmManager } from "../utils/solc";
+import * as path from "path";
 
 @Component
 export default class Compiler extends Vue {
@@ -31,31 +33,20 @@ export default class Compiler extends Vue {
   @Sync("editor/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
+  @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
   currentContractName: string = null;
 
   async compile() {
     if (!this.solc.compiler) return;
     this.solc = { ...this.solc, ...{ compileLoading: true } };
-    let _errs = [];
-    let _result = {};
-
-    await Promise.all(
-      this.files.map(async file => {
-        if (!file.content.includes("contract")) return;
-        const [errs, result] = await Helper.runAsync(this.solc.compiler(file.content));
-        const compileResult = _.keyBy(result, "name");
-        if (errs) {
-          _errs = [..._errs, ...errs];
-          return;
-        }
-        _result = { ..._result, ...compileResult };
-      })
-    );
+    const { path: filePath, content } = this.curFile;
 
     this.editor.session.clearAnnotations();
-    if (_errs.length > 0) {
-      const errs = _errs.map(err => {
+
+    let res = await SolcmManager.compile({ name: filePath, content });
+    if (res.errors) {
+      const errs = res.errors.map(err => {
         const [m] = err.formattedMessage.match(/\d+:\d+/);
         const [row, column] = m.split(":");
         return {
@@ -79,11 +70,21 @@ export default class Compiler extends Vue {
       this.editor.session.setAnnotations(errs);
       return;
     }
-    this.solc = { ...this.solc, ...{ compileLoading: false } };
-    console.log(_result);
-    this.solc = { ...this.solc, ...{ compileResult: _result } };
-    this.currentContractName = Object.keys(_result)[0];
-    eventBus.emit("solc.compiled", _result);
+
+    const result = {};
+    _.each(res.contracts, (contracts, filePath) => {
+      _.each(contracts, (contract, contractName) => {
+        contract.filePath = filePath;
+        contract.fileName = path.basename(filePath);
+        contract.name = contractName;
+        result[contractName] = contract;
+      });
+    });
+
+    console.log(result);
+    this.solc = { ...this.solc, ...{ compileResult: { ...this.solc.compileResult, ...result }, compileLoading: false } };
+    this.currentContractName = Object.keys(result)[0];
+    eventBus.emit("solc.compiled", result);
   }
 
   async initSolc() {
@@ -111,9 +112,11 @@ export default class Compiler extends Vue {
   }
 
   @Watch("solc.version")
-  async onSolcVersionChange(val = this.solc.version) {
+  async onSolcVersionChange(version = this.solc.version) {
     this.solc = { ...this.solc, ...{ loading: true } };
-    const compiler = await solcjs(val);
+
+    const compiler = await SolcmManager.loadSolc(version);
+    // const compiler = await solcjs(val);
     this.solc = { ...this.solc, ...{ compiler, loading: false } };
   }
 

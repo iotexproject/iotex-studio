@@ -336,8 +336,9 @@ export default class Deployer extends Vue {
       _.each(result, (v, k) => {
         const { name } = v;
         const abi = _.groupBy(v.abi, "type");
-        const bytecode = _.get(v, "binary.bytecodes.bytecode");
-        this.contracts[k] = { name, abi, abiRaw: v.abi, bytecode };
+        const bytecode = _.get(v, "evm.bytecode.object");
+        this.$set(this.contracts, k, { name, abi, abiRaw: v.abi, bytecode });
+
         if (!this.currentContract) {
           this.currentContractName = this.contracts[k].name;
         }

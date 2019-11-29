@@ -8,10 +8,10 @@ import omitBy from "lodash/omitBy";
 import omit from "lodash/omit";
 import pick from "lodash/pick";
 import orderBy from "lodash/orderBy";
-
 import isNil from "lodash/isNil";
 import compact from "lodash/compact";
 import cloneDeep from "lodash/cloneDeep";
+import reduce from "lodash/reduce";
 
 export const _ = {
   each,
@@ -26,5 +26,6 @@ export const _ = {
   omit,
   pick,
   cloneDeep,
-  orderBy
+  orderBy,
+  reduce
 };
