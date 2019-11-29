@@ -18,7 +18,8 @@ export class SolcmManager {
 
   static async compile({ name, content }) {
     let readCallback = await solcjsCore.getReadCallback(content, async path => await this.resolveEngine.require(path));
-    const res = this.compiler.compile(content, readCallback);
+    const res = this.compiler.compile(content, 1, readCallback);
+    console.log(res);
     const {
       contracts: { MyContract: MyContract_contract, ...otherContracts },
       sources: { MyContract: MyContract_source, ...otherSources }
