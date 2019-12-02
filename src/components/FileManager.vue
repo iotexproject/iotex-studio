@@ -40,9 +40,19 @@ import { debounce } from "helpful-decorators";
 import { Helper } from "../utils/helper";
 
 //@ts-ignore
-BrowserFS.configure({ fs: "LocalStorage" }, e => {
-  if (e) console.error(e);
-});
+BrowserFS.configure(
+  {
+    fs: "MountableFileSystem",
+    options: {
+      "/": { fs: "IndexedDB", options: {} },
+      "/tmp": { fs: "InMemory" }
+    }
+  },
+  e => {
+    if (e) console.error(e);
+    eventBus.emit("fs.ready");
+  }
+);
 @Component
 export default class FileManager extends Vue {
   WriteFileType: Partial<{ path: string; content: string; ensure?: boolean }>;
@@ -50,7 +60,6 @@ export default class FileManager extends Vue {
   @Sync("editor/fileManager@curFilePath") curFilePath: string;
   @Sync("editor/fileManager@defaultFiles") defaultFiles: EditorStore["fileManager"]["defaultFiles"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
-  @Get("editor/curFileIndex") curFileIndex: number;
 
   fileManager: FS = new FS({});
 
@@ -128,8 +137,9 @@ export default class FileManager extends Vue {
 
   async loadFiles() {
     const { curDir } = this;
-    const files = await this.fileManager.list(curDir);
-    this.files = _.orderBy(files, "name", "asc");
+    let files = await this.fileManager.list(curDir);
+    files = _.orderBy(files, "name", "asc");
+    this.files = _.keyBy(files, "path");
     this.curFilePath = localStorage.getItem("curFilePath") || files[0].path;
   }
 
@@ -148,14 +158,14 @@ export default class FileManager extends Vue {
     localStorage.setItem("curFilePath", this.curFilePath);
   }
 
-  async created() {
-    eventBus.on("editor.init", async () => {
+  async beforeCreate() {
+    eventBus.on("fs.ready", async () => {
       await this.initProject();
       await this.loadFiles();
     });
 
     eventBus.on("editor.content.update", async content => {
-      this.files[this.curFileIndex].content = content;
+      this.files[this.curFilePath].content = content;
       await this.writeFile({ path: this.curFilePath, content });
     });
   }

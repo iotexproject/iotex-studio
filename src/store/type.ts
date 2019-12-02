@@ -13,7 +13,9 @@ export interface EditorStore {
     curDir: string;
     curFilePath: string;
     file?: { path: string; name: string; content: string };
-    files: EditorStore["fileManager"]["file"][];
+    files: {
+      [key: string]: EditorStore["fileManager"]["file"];
+    };
     defaultFiles: { path: string; content: string; ensure: boolean }[];
   };
   ace: {

@@ -1,19 +1,19 @@
 import { make } from "vuex-pathify";
-import { defaultContract, defaultContract1 } from "../utils/constant";
+import * as constant from "../utils/constant";
 import { EditorStore } from "./type";
 
 const state: EditorStore = {
   fileManager: {
-    curDir: "/project",
+    curDir: "/project/default",
     curFilePath: null,
-    files: [],
+    files: {},
     defaultFiles: [
-      { path: "/project/test.sol", content: defaultContract, ensure: true },
-      { path: "/project/test1.sol", content: defaultContract1, ensure: true }
+      { path: "/project/default/test.sol", content: constant.defaultContract, ensure: true },
+      { path: "/project/default/erc20.sol", content: constant.erc20, ensure: true }
     ]
   },
   ace: {
-    content: localStorage.getItem("content") || defaultContract,
+    content: "",
     editor: null,
     theme: "chrome",
     lang: "solidity",
@@ -39,8 +39,7 @@ const state: EditorStore = {
 };
 
 const getters = {
-  curFile: state => state.fileManager.files.find(i => i.path == state.fileManager.curFilePath),
-  curFileIndex: state => state.fileManager.files.findIndex(i => i.path == state.fileManager.curFilePath)
+  curFile: state => state.fileManager.files[state.fileManager.curFilePath]
 };
 const mutations = make.mutations(state);
 

@@ -22,6 +22,7 @@ export default class Editor extends Vue {
   @Sync("editor/ace@theme") theme: string;
   @Sync("editor/ace@lang") lang: string;
   @Sync("editor/ace@options") options: any;
+  @Sync("editor/ace@content") content: string;
 
   @Sync("editor/fileManager@curFilePath") curFilePath: string;
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
@@ -55,7 +56,8 @@ export default class Editor extends Vue {
 
     editor.on("change", () => {
       const content = editor.getValue();
-      eventBus.emit("editor.content.update", content);
+      this.content = content;
+      eventBus.emit("editor.content.update", this.content);
     });
     if (this.options) {
       editor.setOptions(options);

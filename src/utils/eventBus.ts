@@ -10,6 +10,7 @@ interface MessageEvents {
   "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
   "term.message": (message: StdoutType) => void;
   "term.messages": (messages: StdoutType[]) => void;
+  "fs.ready": () => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;

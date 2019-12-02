@@ -3,6 +3,8 @@ import solcVersion from "solc-version";
 import { resolverEngine } from "solc-resolver";
 import resolveGithub from "resolve-github";
 import resolveHttp from "resolve-http";
+import store from "@/store";
+import path from "path";
 
 const solcWrapper = solcjsCore.solcWrapper.wrapper;
 export class SolcmManager {
@@ -16,8 +18,26 @@ export class SolcmManager {
     return compiler;
   }
 
-  static async compile({ name, content }) {
-    let readCallback = await solcjsCore.getReadCallback(content, async path => await this.resolveEngine.require(path));
+  static async compile({ name, content }: { name: string; content: string }) {
+    content = content.replace(/"..\//, `"${path.dirname(path.dirname(name))}/`);
+    content = content.replace(/".\//, `"${path.dirname(name)}/`);
+
+    let readCallback = await solcjsCore.getReadCallback(content, async (filePath: string) => {
+      const { files } = store.state.editor.fileManager;
+      const _filePath = path.resolve(path.dirname(name), filePath);
+
+      const file = files[filePath] || files[_filePath];
+      console.log(filePath);
+      if (file) {
+        return file.content;
+      }
+      if (/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/.test(filePath)) {
+        filePath = filePath.replace(/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/, "https://github.com/OpenZeppelin/zeppelin-solidity/");
+      }
+      const data = await this.resolveEngine.require(filePath);
+
+      return data;
+    });
     const res = this.compiler.compile(content, 1, readCallback);
     console.log(res);
     const {

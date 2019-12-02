@@ -44,9 +44,11 @@ export class FS {
     return stats;
   }
   async ensureDir(dir) {
+    if (dir == "/") return;
     //@ts-ignore
     const [err, exists] = await Helper.runAsync(fs.promises.exists(dir));
     if (!exists && !err) {
+      await this.ensureDir(path.dirname(dir));
       await fs.promises.mkdir(dir);
       return false;
     }
