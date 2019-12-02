@@ -12,7 +12,7 @@
             el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item.name")
         div.flex.justify-end
           el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(currentContract, 'abi')") ABI
-          el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(currentContract, 'binary')") Bytecode
+          el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(currentContract, 'evm.bytecode.object')") Bytecode
 
 </template>
 
@@ -102,7 +102,7 @@ export default class Compiler extends Vue {
   }
 
   async copyBytecode() {
-    const bytecode = _.get(this.currentContract, "binary.bytecodes.bytecode");
+    const bytecode = _.get(this.currentContract, "evm.bytecode.object");
     await this.$copyText(bytecode);
     this.$message.success("Copied value to clipboard");
   }

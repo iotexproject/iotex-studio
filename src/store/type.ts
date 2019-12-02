@@ -36,7 +36,6 @@ export interface EditorStore {
       releases: string[];
     };
     compileResult: Record<string, CompiledContract>;
-    currentContract: any;
   };
 }
 

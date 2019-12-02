@@ -33,12 +33,13 @@ const state: EditorStore = {
       nightly: [],
       releases: []
     },
-    compileResult: {},
-    currentContract: null
+    compileResult: {}
   }
 };
 
-const getters = {
+const getters: {
+  [key: string]: (state: EditorStore) => any;
+} = {
   curFile: state => state.fileManager.files[state.fileManager.curFilePath]
 };
 const mutations = make.mutations(state);
