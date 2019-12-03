@@ -94,8 +94,8 @@ export default class Deployer extends Vue {
   contracts: any = {};
   currentContractName: string = null;
 
-  environment: "JavaScript VM" | "Injencted ioPay";
-  environments: Deployer["environment"][] = ["JavaScript VM", "Injencted ioPay"];
+  environment: "JavaScript VM" | "Injected ioPay";
+  environments: Deployer["environment"][] = ["JavaScript VM", "Injected ioPay"];
   currentEnvironment: Deployer["environment"] = "JavaScript VM";
 
   async deployContractFromAddress() {
@@ -134,7 +134,7 @@ export default class Deployer extends Vue {
 
           address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
           break;
-        case "Injencted ioPay":
+        case "Injected ioPay":
           console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
 
           actionHash = await antenna.iotx.deployContract(
@@ -230,7 +230,7 @@ export default class Deployer extends Vue {
           }
           this.reloadAccounts();
           break;
-        case "Injencted ioPay":
+        case "Injected ioPay":
           console.log({ abi: JSON.stringify(abiRaw), from: callerAddress, method, contractAddress, gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
 
           callFunc = isReadFunc
@@ -325,7 +325,7 @@ export default class Deployer extends Vue {
     switch (this.currentEnvironment) {
       case "JavaScript VM":
         return this.initJSVM();
-      case "Injencted ioPay":
+      case "Injected ioPay":
         return this.initAntenna();
     }
   }
