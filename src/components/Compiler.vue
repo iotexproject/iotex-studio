@@ -88,7 +88,14 @@ export default class Compiler extends Vue {
   }
 
   async initSolc() {
-    const versions = await solcjs.versions();
+    const [err, versions] = await Helper.runAsync(solcjs.versions());
+    if (err) {
+      return eventBus.emit("term.message", {
+        component: "alert",
+        type: "error",
+        text: `load solc compiler versions failed: ${err}`
+      });
+    }
     this.solc = { ...this.solc, ...{ versions } };
 
     await this.onSolcVersionChange();

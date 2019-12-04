@@ -1,4 +1,5 @@
 import ace from "brace";
+import { FS } from "../utils/fs";
 
 export interface StdoutType {
   text: string;
@@ -12,10 +13,11 @@ export interface EditorStore {
   fileManager: {
     curDir: string;
     curFilePath: string;
-    file?: { path: string; name: string; content: string };
+    file?: FS["file"];
     files: {
       [key: string]: EditorStore["fileManager"]["file"];
     };
+    filesLoaded: FS["files"];
     defaultFiles: { path: string; content: string; ensure: boolean }[];
   };
   ace: {

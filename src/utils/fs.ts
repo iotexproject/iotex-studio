@@ -1,5 +1,5 @@
 import util from "util";
-import _fs from "fs";
+import _fs, { stat } from "fs";
 import { Helper } from "./helper";
 import * as path from "path";
 
@@ -22,45 +22,61 @@ if (!fs.promises) {
 }
 
 export class FS {
-  file: { name: string; content: string; ext?: string };
-  files: { name: string; content: string; ext?: string }[];
+  file: { name: string; content: string | null; isDir: boolean; path: string; children: FS["files"] | null };
+  files: FS["file"][];
 
   constructor(props: Partial<FS>) {
     Object.assign(this, props);
   }
-  async list(dir, { ensure = true }: { ensure?: boolean } = {}) {
+  async list(dir, options: { ensure?: boolean; onDir?: (data: FS["file"]) => any; onFile?: (data: FS["file"]) => any } = {}): Promise<FS["files"]> {
+    const { ensure = true, onDir, onFile } = options;
     if (ensure) await this.ensureDir(dir);
-    const files = await fs.promises.readdir(dir);
-    const stats = await Promise.all(
-      files.map(async file => {
-        const content = await fs.promises.readFile(`${dir}/${file}`);
-        return {
+    const filesInDir = await fs.promises.readdir(dir);
+    const files = await Promise.all(
+      filesInDir.map(async file => {
+        const filePath = path.join(dir, file);
+        const stats = await fs.promises.stat(filePath);
+        const isDir = stats.isDirectory();
+
+        let data = {
           name: file,
-          path: `${dir}/${file}`,
-          content: content.toString()
+          isDir,
+          path: filePath,
+          content: null,
+          children: null
         };
+        if (isDir) {
+          data.children = await this.list(filePath, options);
+          onDir && (await onDir(data));
+        } else {
+          data.content = (await fs.promises.readFile(filePath)).toString();
+          onFile && (await onFile(data));
+        }
+
+        return data;
       })
     );
-    return stats;
+    return files;
   }
   async ensureDir(dir) {
     if (dir == "/") return;
     //@ts-ignore
-    const [err, exists] = await Helper.runAsync(fs.promises.exists(dir));
-    if (!exists && !err) {
+    const [exists] = await Helper.runAsync(fs.promises.exists(dir));
+    if (!exists) {
       await this.ensureDir(path.dirname(dir));
       await fs.promises.mkdir(dir);
       return false;
     }
     return true;
   }
-  async ensureWrite(path, content, options?) {
-    const [err, stats] = await Helper.runAsync(fs.promises.stat(path));
+  async ensureWrite(filePath, content, options?) {
+    await this.ensureDir(path.dirname(filePath));
+    const [err, stats] = await Helper.runAsync(fs.promises.stat(filePath));
     if (err || !stats.isFile()) {
-      await fs.promises.writeFile(path, content, options);
+      await fs.promises.writeFile(filePath, content, options);
     }
   }
-  async writeFile(path, content, options?) {
-    return fs.promises.writeFile(path, content, options);
+  async writeFile(filePath, content, options?) {
+    return fs.promises.writeFile(filePath, content, options);
   }
 }

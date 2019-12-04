@@ -1,19 +1,16 @@
 <template lang="pug">
 
-  .file-manager.flex.flex-col.relative(v-contextmenu:contextmenu)
-    .flex.flex-col
-      .file(
-        v-for="item in files" 
-        :key="item.path" 
-        :class="{'bg-gray-500': item.path == curFilePath}" 
-        @click.prevent="curFilePath = item.path" 
-        @mouseover="mouseoverFile(item)" 
-        ) 
-        span {{item.name}}
+  .file-manager.flex.flex-col.relative
+    .flex.flex-col.flex-1
+      el-tree(:data="filesLoaded" default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
+        div.custom-tree-node.w-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
+          div.el-tree-node_label {{node.label}}
+      .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
-      v-contextmenu-item(@click="createFileForm.visible = true") Create new file
-      v-contextmenu-item(:disabled="!cursor.isFile") Rename file
-      v-contextmenu-item(:disabled="!cursor.isFile" @click="deleteFile") Delete file
+      v-contextmenu-item(v-if="!cursor.file || cursor.isDir" @click="showCreateNewFile(cursor.file, 'file')") New File
+      v-contextmenu-item(v-if="!cursor.file || cursor.isDir"  @click="showCreateNewFile(cursor.file, 'dir')") New Folder
+      v-contextmenu-item(v-if="cursor.file" disabled @click="renameFile") Rename
+      v-contextmenu-item(v-if="cursor.file" @click="deleteFile") Delete
 
     el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
       el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible")
@@ -38,6 +35,7 @@ import { _ } from "../utils/lodash";
 import { eventBus } from "../utils/eventBus";
 import { debounce } from "helpful-decorators";
 import { Helper } from "../utils/helper";
+import * as path from "path";
 
 //@ts-ignore
 BrowserFS.configure(
@@ -60,53 +58,89 @@ export default class FileManager extends Vue {
   @Sync("editor/fileManager@curFilePath") curFilePath: string;
   @Sync("editor/fileManager@defaultFiles") defaultFiles: EditorStore["fileManager"]["defaultFiles"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
+  @Sync("editor/fileManager@filesLoaded") filesLoaded: EditorStore["fileManager"]["filesLoaded"];
 
   fileManager: FS = new FS({});
 
   cursor: {
-    isFile: boolean;
     file: EditorStore["fileManager"]["file"];
+    isDir: boolean;
   } = {
-    isFile: false,
-    file: null
+    file: null,
+    isDir: false
   };
 
-  createFileForm = {
+  createFileForm: {
+    visible: boolean;
+    name: string;
+    type: "file" | "dir";
+    target: Partial<FS["file"]> | null;
+    rules: any;
+  } = {
     visible: false,
     name: "",
+    type: "file",
+    target: null,
     rules: { name: [{ required: true }] }
   };
 
-  @debounce(100)
-  mouseoverFile(item) {
+  onContextMenuHide() {
     this.cursor = {
-      isFile: true,
-      file: item
+      file: null,
+      isDir: false
     };
   }
 
-  onContextMenuHide() {
+  handleNodeContextMenu(e, node: FS["file"]) {
     this.cursor = {
-      isFile: false,
-      file: null
+      file: node,
+      isDir: node.isDir
     };
+  }
+
+  handleNodeClick(node: FS["file"]) {
+    if (node.isDir) return;
+
+    this.curFilePath = node.path;
   }
 
   async initProject() {
     const { curDir } = this;
-    const exists = await this.fileManager.ensureDir(curDir);
-    if (exists) return;
+    // const exists = await this.fileManager.ensureDir(curDir);
+    // if (exists) return;
     await this.writeFiles(this.defaultFiles);
+  }
+
+  showCreateNewFile(file: FS["file"], type: any) {
+    this.createFileForm = {
+      ...this.createFileForm,
+      visible: true,
+      type,
+      target: file
+        ? { ...file }
+        : {
+            isDir: true,
+            path: this.curDir
+          }
+    };
   }
 
   async createNewFile() {
     //@ts-ignore
     this.$refs.createFileForm.validate(async valid => {
       if (!valid) return;
-      const { name } = this.createFileForm;
-      const { curDir } = this;
-      const fileName = name.replace(".sol", "") + ".sol";
-      await this.writeFile({ path: `${curDir}/${fileName}`, content: "" });
+      const { name, target, type } = this.createFileForm;
+
+      if (type == "file") {
+        const fileName = name.replace(".sol", "") + ".sol";
+        const filePath = path.join(target.path, fileName);
+
+        await this.writeFile({ path: filePath, content: "" });
+      } else if (type == "dir") {
+        const filePath = path.join(target.path, name);
+        await this.fileManager.ensureDir(filePath);
+      }
+
       this.loadFiles();
 
       this.createFileForm = {
@@ -116,6 +150,8 @@ export default class FileManager extends Vue {
       };
     });
   }
+
+  async renameFile() {}
 
   async deleteFile() {
     const { file } = this.cursor;
@@ -137,20 +173,27 @@ export default class FileManager extends Vue {
 
   async loadFiles() {
     const { curDir } = this;
-    let files = await this.fileManager.list(curDir);
-    files = _.orderBy(files, "name", "asc");
-    this.files = _.keyBy(files, "path");
-    this.curFilePath = localStorage.getItem("curFilePath") || files[0].path;
+    const fileMapping = {};
+    let files = await this.fileManager.list(curDir, {
+      onFile: async data => {
+        fileMapping[data.path] = data;
+      }
+    });
+    this.files = fileMapping;
+    this.filesLoaded = files;
+    // this.curFilePath = localStorage.getItem("curFilePath") || files[0].path;
   }
 
-  async writeFile({ path, content, ensure = false }: FileManager["WriteFileType"]) {
+  async writeFile({ path: filePath, content, ensure = false }: FileManager["WriteFileType"]) {
     if (ensure) {
-      return this.fileManager.ensureWrite(path, content);
+      return this.fileManager.ensureWrite(filePath, content);
     }
-    return this.fileManager.writeFile(path, content);
+    return this.fileManager.writeFile(filePath, content);
   }
   async writeFiles(files: FileManager["WriteFileType"][]) {
-    return Promise.all(files.map(file => this.writeFile(file)));
+    for await (let file of files) {
+      await this.writeFile(file);
+    }
   }
 
   @Watch("curFilePath")
