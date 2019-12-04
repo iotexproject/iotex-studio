@@ -11,6 +11,6 @@ export const wsSigner = new WsSignerPlugin({
   }
 });
 
-export const antenna = new Antenna("http://api.testnet.iotex.one:80", {
+export const antenna = new Antenna("https://api.testnet.iotex.one:443", {
   signer: wsSigner
 });
