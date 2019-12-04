@@ -16,7 +16,7 @@ const state: EditorStore = {
   ace: {
     content: "",
     editor: null,
-    theme: "chrome",
+    theme: "tomorrow_night_eighties",
     lang: "solidity",
     options: {
       enableBasicAutocompletion: true,

@@ -25,7 +25,7 @@
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress") At Address
           el-input(placeholder="Loadd contract from Address"  v-model="deployForm.atContractInput")
       .deplyed-contracts.mt-6.text-sm
-        .flex.mb-2.text-sm.text-gray-800.font-bold Deployed Contracts
+        .flex.mb-2.text-sm.font-bold Deployed Contracts
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
           .flex.justify-between
             div.mb-2 {{contract.name}} at {{contract.address|truncate(12, "...")}}

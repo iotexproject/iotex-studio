@@ -30,14 +30,14 @@
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
 import git from "isomorphic-git";
-import { FS, fs } from "../utils/fs";
-import { defaultContract } from "../utils/constant";
+import { FS, fs } from "@/utils/fs";
+import { defaultContract } from "@/utils/constant";
 import { Sync, Get } from "vuex-pathify";
-import { EditorStore } from "../store/type";
-import { _ } from "../utils/lodash";
-import { eventBus } from "../utils/eventBus";
+import { EditorStore } from "@/store/type";
+import { _ } from "@/utils/lodash";
+import { eventBus } from "@/utils/eventBus";
 import { debounce } from "helpful-decorators";
-import { Helper } from "../utils/helper";
+import { Helper } from "@/utils/helper";
 import * as path from "path";
 
 //@ts-ignore

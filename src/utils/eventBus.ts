@@ -19,7 +19,6 @@ export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;
 eventBus.on("editor.init", editor => {
   require("brace/ext/language_tools");
   require("brace/mode/javascript");
-  require("brace/theme/chrome");
   require("ace-mode-solidity/build/remix-ide/mode-solidity");
   require("brace/snippets/javascript");
   editor.commands.addCommand({

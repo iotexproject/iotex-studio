@@ -1,10 +1,10 @@
 <template lang="pug">
   .app.flex.justify-center.px-10
-    file-manager.file-manager
-    .editor.flex-1.px-4.flex.flex-col.p
+    file-manager.file-manager.border-r
+    .editor.flex-1.flex.flex-col.p
       editor.flex-auto(ref="editor" height='100%' width='100%')
-      terminal(height="300px" width="100%")
-    .plugin
+      terminal.border-t(height="300px" width="100%")
+    .plugin.px-2.border-l
       compiler
       el-divider
       deployer
@@ -19,15 +19,21 @@ export default class Home extends Vue {}
 </script>
 
 <style lang="stylus" scoped>
+@import "../assets/global.styl"
+
 .app
   height 100vh
   padding-top 40px
   .file-manager
     width 10vw
     overflow auto
+    border-color color-dark-border
+  .terminal
+    border-color color-dark-border
   .editor
     width 70vw
   .plugin
+    border-color color-dark-border
     width 20vw
     overflow auto
 </style>

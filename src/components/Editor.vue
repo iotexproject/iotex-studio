@@ -47,6 +47,8 @@ export default class Editor extends Vue {
     eventBus.emit("editor.init", editor);
 
     editor.getSession().setMode(`ace/mode/${lang}`);
+    require(`brace/theme/${theme}`);
+
     editor.setTheme(`ace/theme/${theme}`);
 
     if (this.curFilePath) {

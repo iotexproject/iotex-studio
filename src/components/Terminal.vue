@@ -1,11 +1,11 @@
 <template lang="pug">
   .terminal
-    .content.bg-gray-900(:style="{height: height, width: width}")
+    .content(:style="{height: height, width: width}")
       .flex.flex-col-reverse.h-full.overflow-auto
         .item(v-for="(item,index) in stdout" :key="index") 
           el-alert(v-if="item.component='alert'" :title="item.text" :type="item.type" show-icon :description="item.description" :closable="false")
           span(v-else) {{item.text}}
-    .input-bar.flex.px-2.bg-gray-800.w-full.items-center
+    .input-bar.flex.px-2.w-full.items-center
       span >
       el-input.input(v-model="input" @keyup.enter.native="runCommand")
     
@@ -64,18 +64,21 @@ export default class Term extends Vue {
 </script>
 
 <style lang="stylus" scoped>
+@import "../assets/global.styl"
+
 .terminal
   color white
   .content
     overflow auto
   .input-bar
     height 30px
+    background-color lighten(color-dark, 5)
     >>> .el-input__inner
       color white
       height 30px
       line-height 30px
-      background transparent
       border none
+      background-color lighten(color-dark, 5)
   >>> .el-alert
     background transparent !important
 </style>
