@@ -9,6 +9,7 @@ interface MessageEvents {
   "solc.compile": () => void;
   "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
   "term.message": (message: StdoutType) => void;
+  "term.error": (text: string) => void;
   "term.messages": (messages: StdoutType[]) => void;
   "fs.ready": () => void;
 }

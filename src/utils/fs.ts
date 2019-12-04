@@ -79,4 +79,25 @@ export class FS {
   async writeFile(filePath, content, options?) {
     return fs.promises.writeFile(filePath, content, options);
   }
+
+  async rm(path) {
+    const [err, stat] = await Helper.runAsync(fs.promises.lstat(path));
+    if (err) throw err;
+    if (stat.isDirectory()) {
+      const files = await fs.promises.readdir(path);
+
+      for (let file of files) {
+        const curPath = `${path}/${file}`;
+        const stat = await fs.promises.lstat(curPath);
+        if (stat.isDirectory) {
+          await this.rm(curPath);
+        } else {
+          await fs.promises.unlink(curPath);
+        }
+      }
+      await fs.promises.rmdir(path);
+    } else if (stat.isFile()) {
+      await fs.promises.unlink(path);
+    }
+  }
 }

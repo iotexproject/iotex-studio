@@ -37,12 +37,20 @@ export default class Term extends Vue {
   }
 
   created() {
-    eventBus.on("term.message", message => {
-      this.writeLn(message);
-    });
-    eventBus.on("term.messages", messages => {
-      messages.forEach(i => this.writeLn(i));
-    });
+    eventBus
+      .on("term.message", message => {
+        this.writeLn(message);
+      })
+      .on("term.messages", messages => {
+        messages.forEach(i => this.writeLn(i));
+      })
+      .on("term.error", text => {
+        this.writeLn({
+          component: "alert",
+          text,
+          type: "error"
+        });
+      });
   }
 
   mounted() {
@@ -66,7 +74,7 @@ export default class Term extends Vue {
       color white
       height 30px
       line-height 30px
-      background  transparent
+      background transparent
       border none
   >>> .el-alert
     background transparent !important

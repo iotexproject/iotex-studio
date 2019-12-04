@@ -4,7 +4,10 @@
     .flex.flex-col.flex-1
       el-tree(:data="filesLoaded" default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
         div.custom-tree-node.w-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
-          div.el-tree-node_label {{node.label}}
+          div.el-tree-node_label
+            el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
+            el-icon.el-icon-document(v-if="!data.isDir")
+            span.ml-2 {{data.name}}
       .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir" @click="showCreateNewFile(cursor.file, 'file')") New File
@@ -14,7 +17,7 @@
 
     el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
       el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible")
-        el-form-item(prop="name" )
+        el-form-item(prop="name")
           el-input(v-model="createFileForm.name"  autofocus placeholder="file name")
       span(slot="footer")
         el-button(@click="createFileForm.visible= false") Cancel
@@ -156,18 +159,17 @@ export default class FileManager extends Vue {
   async deleteFile() {
     const { file } = this.cursor;
     if (!file) return;
-
     const [err] = await Helper.runAsync(
       this.$msgbox({
-        title: "Delete a file",
-        message: "Are you sure you want to delete this file?",
+        title: `Delete a ${file.isDir ? "Folder" : "File"}`,
+        message: `Are you sure you want to delete this ${file.isDir ? "Folder" : "File"}?`,
         showCancelButton: true,
         confirmButtonText: "OK"
       })
     );
-    if (err) return;
+    if (err) return eventBus.emit("term.error", err.message);
+    await this.fileManager.rm(file.path);
 
-    await fs.promises.unlink(file.path);
     await this.loadFiles();
   }
 
@@ -191,7 +193,7 @@ export default class FileManager extends Vue {
     return this.fileManager.writeFile(filePath, content);
   }
   async writeFiles(files: FileManager["WriteFileType"][]) {
-    for await (let file of files) {
+    for (let file of files) {
       await this.writeFile(file);
     }
   }
