@@ -27,7 +27,6 @@ export class SolcmManager {
       const _filePath = path.resolve(path.dirname(name), filePath);
 
       const file = files[filePath] || files[_filePath];
-      console.log(filePath);
       if (file) {
         return file.content;
       }

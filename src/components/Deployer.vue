@@ -22,8 +22,8 @@
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
           el-input(:placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))" v-if="$_.get(currentContract, 'abi.constructor.0')"  v-model="deployForm.constructorInput")
         .flex.mt-4(v-if="currentContract")
-          el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress") At Address
-          el-input(placeholder="Loadd contract from Address"  v-model="deployForm.atContractInput")
+          el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput") At Address
+          el-input(placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
       .deplyed-contracts.mt-6.text-sm
         .flex.mb-2.text-sm.font-bold Deployed Contracts
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
@@ -86,9 +86,9 @@ export default class Deployer extends Vue {
     gasLimit: 3000000,
     gasPrice: 1,
     value: 0,
-    valueType: "wei"
+    valueType: "Rau"
   };
-  valueTypes = ["wei", "gwei", "finney", "ether"];
+  valueTypes = ["Rau", "KRau", "MRau", "GRua", "Qev", "Jing", "Iotx"];
   accountIndex = 0;
 
   contracts: any = {};
@@ -213,7 +213,7 @@ export default class Deployer extends Vue {
                 gasLimit
               });
 
-          console.log({ method, senderPrivateKey, callerAddress, contractAddress: util.toBuffer(contractAddress), types, datas, value, gasLimit });
+          console.log({ method, senderPrivateKey, callerAddress, contractAddress, types, datas, value, gasLimit });
           [err, result] = await Helper.runAsync(callFunc);
           if (err) {
             console.error({ err });
@@ -273,7 +273,7 @@ export default class Deployer extends Vue {
 
   accountLabel(item) {
     if (!item.account) return item.address;
-    return `${truncate(item.address, 12, "...")} ${utils.formatEther(item.account.balance)} ether`;
+    return `${truncate(item.address, 12, "...")} ${utils.formatEther(item.account.balance)} iotx`;
   }
 
   parseInputs(item) {
@@ -301,7 +301,7 @@ export default class Deployer extends Vue {
   get value() {
     let { value: _value, valueType } = this.form;
 
-    return Number(utils.parseUnits(_value.toString(), valueType));
+    return Number(toRau(String(_value), valueType));
   }
 
   get account() {

@@ -6,6 +6,7 @@ import * as util from "ethereumjs-util";
 import Account from "ethereumjs-account";
 import { Wallet, utils } from "ethers";
 import { eventBus } from "./eventBus";
+import { truncate } from "./filter";
 
 export class JSVM {
   vm = new VM();
@@ -14,13 +15,13 @@ export class JSVM {
     const account = new Account({ balance: 1e18 * 100 });
     const wallet = Wallet.createRandom();
 
-    const privateKey = wallet.privateKey.replace("0x", "");
+    const privateKey = wallet.privateKey.replace(/^0x/, "");
     const privateKeyBuffer = Buffer.from(privateKey, "hex");
     const addressBuffer = util.privateToAddress(privateKeyBuffer);
 
     await this.vm.pStateManager.putAccount(addressBuffer, account);
     return {
-      address: wallet.address,
+      address: wallet.address.replace(/^0x/, "io").toLowerCase(),
       addressBuffer,
       privateKey,
       privateKeyBuffer,
@@ -68,15 +69,15 @@ export class JSVM {
       throw deploymentResult.execResult.exceptionError;
     }
 
-    return util.bufferToHex(deploymentResult.createdAddress);
+    return util.bufferToHex(deploymentResult.createdAddress).replace(/^0x/, "io");
   }
 
   async readContract({ contractAddress, callerAddress, types, datas, method }: { method: string; contractAddress: string; callerAddress: string; types?: string[]; datas?: string[] }) {
     const params = abi.rawEncode(types, datas);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
 
-    const _contractAddress = util.toBuffer(contractAddress);
-    const _callerAddress = util.toBuffer(callerAddress);
+    const _contractAddress = util.toBuffer(contractAddress.replace(/^io/, "0x"));
+    const _callerAddress = util.toBuffer(callerAddress.replace(/^io/, "0x"));
     const result = await this.vm.runCall({
       to: _contractAddress,
       caller: _callerAddress,
@@ -85,7 +86,12 @@ export class JSVM {
     });
 
     eventBus.emit("term.message", {
-      text: `call from: ${callerAddress} to:${contractAddress} data:${data} `
+      text: `call from: ${truncate(callerAddress, 12, "...")},to:${truncate(contractAddress, 12, "...")},data:${truncate(data, 12, "...")} `,
+      data: {
+        callerAddress,
+        contractAddress,
+        data
+      }
     });
 
     if (result.execResult.exceptionError) {
@@ -116,7 +122,7 @@ export class JSVM {
     const params = abi.rawEncode(types, datas);
     const nonce = await this.getAccountNonce(senderPrivateKey);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
-    const _contractAddress = util.toBuffer(contractAddress);
+    const _contractAddress = util.toBuffer(contractAddress.replace(/^io/, "0x"));
 
     const tx = new Transaction({
       to: _contractAddress,
@@ -129,8 +135,14 @@ export class JSVM {
 
     tx.sign(senderPrivateKey);
     const result = await this.vm.runTx({ tx });
+    const message = {
+      senderAddress: `io${tx.getSenderAddress().toString("hex")}`,
+      contractAddress,
+      data: tx.data.toString("hex")
+    };
     eventBus.emit("term.message", {
-      text: `call from: ${tx.getSenderAddress().toString("hex")} to:${tx.to.toString("hex")} data:${tx.data.toString("hex")} `
+      text: `call from: ${truncate(message.senderAddress, 12, "...")},to:${truncate(message.contractAddress, 12, "...")},data:${truncate(message.data, 12, "...")} `,
+      data: message
     });
 
     if (result.execResult.exceptionError) {

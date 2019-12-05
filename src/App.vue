@@ -14,7 +14,8 @@ export default class App extends Vue {}
 <style lang="stylus">
 @import './assets/tailwind.css'
 @import '~v-contextmenu/dist/index.css'
-@import "./assets/global.styl"
+@import './assets/global.styl'
+
 #app
   background color-dark
   font-family 'Avenir', Helvetica, Arial, sans-serif
@@ -26,7 +27,7 @@ div
   border-color color-dark-border
 #app
   .ace_gutter
-    color  color-dark-text
+    color color-dark-text
     background-color color-dark
     border-color color-dark-border
 body
@@ -36,13 +37,10 @@ body
     margin-bottom 0
   .el-form-item__label
     font-size 12px
-  .el-tree-node__children
-    .el-tree-node__content
-      padding-left 8px !important
   .el-icon-caret-right
     display none
-  .el-tree, .el-input_inner,   .el-input, .el-input__inner, .el-select-dropdown, .el-popper, .el-form-item__label
-    color  color-dark-text
+  .el-tree, .el-input_inner, .el-input, .el-input__inner, .el-select-dropdown, .el-popper, .el-form-item__label, .el-message-box, .v-contextmenu
+    color color-dark-text
     background-color color-dark
     border-color color-dark-input-border
   .el-select-dropdown__item
@@ -52,9 +50,8 @@ body
       background-color darken(color-dark, 5)
   .el-divider
     background-color lighten(color-dark, 10)
-  .el-button--primary, .el-button--default
-    &:hover, &:focus
-      color color-dark-text
+  .el-button--primary, .el-button--default, .el-button.is-disabled
+    &:hover, &:focus, color color-dark-text
       background lighten(color-dark, 10%)
       border-color lighten(color-dark-input-border, 10%)
     color color-dark-text
@@ -70,4 +67,13 @@ body
     &:focus, &:hover
       > .el-tree-node__content
         background-color lighten(color-dark, 10%)
+  .el-message-box
+    .el-message-box__title
+      color color-dark-text
+    .el-message-box__content
+      color darken(color-dark-text, 20%)
+  .v-contextmenu
+    box-shadow 2px 2px 8px darken(color-dark, 30%)
+    .v-contextmenu-item
+      color color-dark-text
 </style>
