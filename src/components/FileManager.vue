@@ -1,13 +1,13 @@
 <template lang="pug">
-
   .file-manager.flex.flex-col.relative
-    .flex.flex-col.flex-1
-      el-tree(:data="filesLoaded" default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
+    p.pb-4 File Manager
+    .flex.flex-col.flex-1.ml-2
+      el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
         div.custom-tree-node.w-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
           div.el-tree-node_label
             el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
             el-icon.el-icon-document(v-if="!data.isDir")
-            span.ml-2 {{data.name}}
+            span.ml-2.text-sm {{data.name}}
       .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir" @click="showCreateNewFile(cursor.file, 'file')") New File
@@ -39,6 +39,7 @@ import { eventBus } from "@/utils/eventBus";
 import { debounce } from "helpful-decorators";
 import { Helper } from "@/utils/helper";
 import * as path from "path";
+import { FuncBus } from "../utils/funcBus";
 
 //@ts-ignore
 BrowserFS.configure(
@@ -63,6 +64,7 @@ export default class FileManager extends Vue {
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Sync("editor/fileManager@filesLoaded") filesLoaded: EditorStore["fileManager"]["filesLoaded"];
 
+  name = "filemanager";
   fileManager: FS = new FS({});
 
   cursor: {
@@ -87,6 +89,28 @@ export default class FileManager extends Vue {
     rules: { name: [{ required: true }] }
   };
 
+  loadConfig() {
+    const config = FuncBus.getConfig(this.name);
+    Object.assign(this, config);
+  }
+
+  @debounce(500)
+  saveConfig() {
+    const { curFilePath } = this;
+    FuncBus.setConfig(this.name, {
+      curFilePath
+    });
+  }
+
+  setCurrentNode() {
+    const filePath = this.curFilePath;
+    //@ts-ignore
+    const tree = this.$refs.tree as any;
+    const node = tree.store.nodesMap[filePath];
+    tree.setCurrentKey(filePath);
+    this.expandNode(node);
+  }
+
   onContextMenuHide() {
     this.cursor = {
       file: null,
@@ -105,12 +129,11 @@ export default class FileManager extends Vue {
     if (node.isDir) return;
 
     this.curFilePath = node.path;
+    eventBus.emit("fs.select", this.files[node.path]);
   }
 
   async initProject() {
     const { curDir } = this;
-    // const exists = await this.fileManager.ensureDir(curDir);
-    // if (exists) return;
     await this.writeFiles(this.defaultFiles);
   }
 
@@ -169,13 +192,12 @@ export default class FileManager extends Vue {
     );
     if (err) return eventBus.emit("term.error", err.message);
     await this.fileManager.rm(file.path);
-
     await this.loadFiles();
   }
 
   async loadFiles() {
     const { curDir } = this;
-    const fileMapping = {};
+    const fileMapping: EditorStore["fileManager"]["files"] = {};
     let files = await this.fileManager.list(curDir, {
       onFile: async data => {
         fileMapping[data.path] = data;
@@ -183,7 +205,7 @@ export default class FileManager extends Vue {
     });
     this.files = fileMapping;
     this.filesLoaded = files;
-    // this.curFilePath = localStorage.getItem("curFilePath") || files[0].path;
+    eventBus.emit("fs.loadFiles", fileMapping);
   }
 
   async writeFile({ path: filePath, content, ensure = false }: FileManager["WriteFileType"]) {
@@ -198,21 +220,36 @@ export default class FileManager extends Vue {
     }
   }
 
-  @Watch("curFilePath")
-  oncurFilePathChange() {
-    localStorage.setItem("curFilePath", this.curFilePath);
+  expandNode(node) {
+    //@ts-ignore
+    if (node.parent) {
+      if (!node.parent.expanded) {
+        this.expandNode(node.parent);
+      }
+    }
+    node.expanded = true;
   }
 
-  async beforeCreate() {
-    eventBus.on("fs.ready", async () => {
-      await this.initProject();
-      await this.loadFiles();
-    });
+  @Watch("curFilePath")
+  oncurFilePathChange() {
+    this.setCurrentNode();
+    this.saveConfig();
+  }
 
-    eventBus.on("editor.content.update", async content => {
-      this.files[this.curFilePath].content = content;
-      await this.writeFile({ path: this.curFilePath, content });
-    });
+  async created() {
+    eventBus
+      .on("fs.ready", async () => {
+        await this.initProject();
+        await this.loadFiles();
+        this.loadConfig();
+      })
+      .on("toolbar.tab.select", file => {
+        this.curFilePath = file.path;
+      })
+      .on("editor.content.update", async content => {
+        this.files[this.curFilePath].content = content;
+        await this.writeFile({ path: this.curFilePath, content });
+      });
   }
 }
 </script>
