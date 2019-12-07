@@ -75,13 +75,13 @@ export class JSVM {
   async readContract({ contractAddress, callerAddress, types, datas, method }: { method: string; contractAddress: string; callerAddress: string; types?: string[]; datas?: string[] }) {
     const params = abi.rawEncode(types, datas);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
-    contractAddress = contractAddress.replace(/^io/, "0x");
-    callerAddress = callerAddress.replace(/^io/, "0x");
 
+    const _contractAddress = util.toBuffer(contractAddress.replace(/^io/, "0x"));
+    const _callerAddress = util.toBuffer(callerAddress.replace(/^io/, "0x"));
     const result = await this.vm.runCall({
-      to: util.toBuffer(contractAddress),
-      caller: util.toBuffer(callerAddress),
-      origin: util.toBuffer(callerAddress),
+      to: _contractAddress,
+      caller: _callerAddress,
+      origin: _callerAddress,
       data: util.toBuffer(data)
     });
 

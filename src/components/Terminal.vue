@@ -9,9 +9,10 @@
           .flex.flex-col.detail.px-6.text-xs(v-if="item.data && item.expanded")
             div.flex.justify-between(v-for="(value, key) in item.data" :key="key")
               div {{key}}:
-              div(@click="copyText(value)")
+              div
                 span {{value}}
-                el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
+                span(@click="copyText(value)")
+                  el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
     .input-bar.flex.px-2.w-full.items-center
       span >
       el-input.input(v-model="input" @keyup.enter.native="runCommand")
