@@ -17,7 +17,7 @@ interface MessageEvents {
   "fs.ready": () => void;
   "fs.select": (file: FS["file"]) => void;
   "fs.loadFiles": (files: EditorStore["fileManager"]["files"]) => void;
-  "toolbar.tab.select": (file: FS["file"]) => void;
+  "toolbar.tab.select": (file: Partial<FS["file"]>) => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;
