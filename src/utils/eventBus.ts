@@ -12,7 +12,10 @@ interface MessageEvents {
   "solc.compile": () => void;
   "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
   "term.message": (message: StdoutType) => void;
-  "term.error": (text: string) => void;
+  "term.error": (message: StdoutType) => void;
+  "term.success": (message: StdoutType) => void;
+  "term.warning": (message: StdoutType) => void;
+  "term.info": (message: StdoutType) => void;
   "term.messages": (messages: StdoutType[]) => void;
   "fs.ready": () => void;
   "fs.select": (file: FS["file"]) => void;

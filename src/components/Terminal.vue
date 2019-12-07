@@ -2,9 +2,16 @@
   .terminal
     .content(:style="{height: height, width: width}")
       .flex.flex-col-reverse.h-full.overflow-auto
-        .item(v-for="(item,index) in stdout" :key="index") 
-          el-alert(v-if="item.component='alert'" :title="item.text" :type="item.type" show-icon :description="item.description" :closable="false")
-          span(v-else) {{item.text}}
+        .item(v-for="(item,index) in stdout" :key="index")
+          div(@click="item.expanded = !item.expanded") 
+            el-alert(v-if="item.component='alert'" :title="item.text" :type="item.type" show-icon :description="item.description" :closable="false")
+            span(v-else) {{item.text}}
+          .flex.flex-col.detail.px-6.text-xs(v-if="item.data && item.expanded")
+            div.flex.justify-between(v-for="(value, key) in item.data" :key="key")
+              div {{key}}:
+              div(@click="copyText(value)")
+                span {{value}}
+                el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
     .input-bar.flex.px-2.w-full.items-center
       span >
       el-input.input(v-model="input" @keyup.enter.native="runCommand")
@@ -28,12 +35,17 @@ export default class Term extends Vue {
   stdin = [];
   stdout = [];
 
+  async copyText(text) {
+    await this.$copyText(text);
+    this.$message.success("Copied value to clipboard");
+  }
+
   runCommand() {
     this.input = null;
   }
 
   writeLn(data: StdoutType) {
-    this.stdout.unshift(data);
+    this.stdout.unshift({ ...data, expanded: false });
   }
 
   created() {
@@ -44,13 +56,10 @@ export default class Term extends Vue {
       .on("term.messages", messages => {
         messages.forEach(i => this.writeLn(i));
       })
-      .on("term.error", text => {
-        this.writeLn({
-          component: "alert",
-          text,
-          type: "error"
-        });
-      });
+      .on("term.error", message => this.writeLn({ component: "alert", type: "error", ...message }))
+      .on("term.success", message => this.writeLn({ component: "alert", type: "success", ...message }))
+      .on("term.warning", message => this.writeLn({ component: "alert", type: "warning", ...message }))
+      .on("term.info", message => this.writeLn({ component: "alert", type: "info", ...message }));
   }
 
   mounted() {
@@ -64,12 +73,14 @@ export default class Term extends Vue {
 </script>
 
 <style lang="stylus" scoped>
-@import "../assets/global.styl"
+@import '../assets/global.styl'
 
 .terminal
   color white
   .content
     overflow auto
+  .detail
+    color #909399
   .input-bar
     height 30px
     background-color lighten(color-dark, 5)

@@ -157,10 +157,12 @@ export default class Deployer extends Vue {
       }
 
       if (address) {
-        eventBus.emit("term.message", {
-          component: "alert",
-          type: "success",
-          text: `Deploy Contract: ${name}, \n Address: ${address}`
+        eventBus.emit("term.success", {
+          text: `Deploy Contract: ${name}, \n Address: ${address}`,
+          data: {
+            contractName: name,
+            contractAddress: address
+          }
         });
         this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false });
         this.reloadAccounts();

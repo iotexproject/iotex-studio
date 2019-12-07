@@ -89,4 +89,11 @@ body
       margin 0
     .el-tabs__nav, .el-tabs__header
       border none !important
+  .el-alert
+    padding 4px 16px
+    .el-alert__title
+      cursor pointer
+      opacity 1
+      &:hover
+        opacity 0.7
 </style>

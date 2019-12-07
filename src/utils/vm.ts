@@ -75,21 +75,21 @@ export class JSVM {
   async readContract({ contractAddress, callerAddress, types, datas, method }: { method: string; contractAddress: string; callerAddress: string; types?: string[]; datas?: string[] }) {
     const params = abi.rawEncode(types, datas);
     let data = "0x" + abi.methodID(method, types).toString("hex") + params.toString("hex");
+    contractAddress = contractAddress.replace(/^io/, "0x");
+    callerAddress = callerAddress.replace(/^io/, "0x");
 
-    const _contractAddress = util.toBuffer(contractAddress.replace(/^io/, "0x"));
-    const _callerAddress = util.toBuffer(callerAddress.replace(/^io/, "0x"));
     const result = await this.vm.runCall({
-      to: _contractAddress,
-      caller: _callerAddress,
-      origin: _callerAddress,
+      to: util.toBuffer(contractAddress),
+      caller: util.toBuffer(callerAddress),
+      origin: util.toBuffer(callerAddress),
       data: util.toBuffer(data)
     });
 
-    eventBus.emit("term.message", {
+    eventBus.emit("term.info", {
       text: `call from: ${truncate(callerAddress, 12, "...")},to:${truncate(contractAddress, 12, "...")},data:${truncate(data, 12, "...")} `,
       data: {
-        callerAddress,
-        contractAddress,
+        from: callerAddress,
+        to: contractAddress,
         data
       }
     });
@@ -140,9 +140,13 @@ export class JSVM {
       contractAddress,
       data: tx.data.toString("hex")
     };
-    eventBus.emit("term.message", {
+    eventBus.emit("term.info", {
       text: `call from: ${truncate(message.senderAddress, 12, "...")},to:${truncate(message.contractAddress, 12, "...")},data:${truncate(message.data, 12, "...")} `,
-      data: message
+      data: {
+        from: message.senderAddress,
+        to: message.contractAddress,
+        data: message.data
+      }
     });
 
     if (result.execResult.exceptionError) {

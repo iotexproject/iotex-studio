@@ -9,11 +9,11 @@ contract TestToken is ERC20, ERC20Detailed {
     }
 }`;
 
-export const defaultContract = `pragma solidity 0.5.0;
+export const defaultContract = `pragma solidity ^0.5.0;
 
-contract Array1 {
+contract Array {
     uint256[] public arr;
-    
+
     constructor(uint256[] memory _arr) public {
         arr = _arr;
     }

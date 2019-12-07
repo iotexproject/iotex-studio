@@ -7,6 +7,7 @@ export interface StdoutType {
   data?: Object;
   type?: "success" | "info" | "warning" | "error";
   description?: string;
+  expanded?: boolean;
 }
 
 export interface EditorStore {

@@ -190,7 +190,10 @@ export default class FileManager extends Vue {
         confirmButtonText: "OK"
       })
     );
-    if (err) return eventBus.emit("term.error", err.message);
+    if (err)
+      return eventBus.emit("term.error", {
+        text: err.message
+      });
     await this.fileManager.rm(file.path);
     await this.loadFiles();
   }
