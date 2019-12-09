@@ -1,10 +1,19 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import editor from "./editor";
+import storage from "./storage";
 
 import pathify, { make } from "vuex-pathify";
-import { EditorStore } from "./type";
+import { EditorStore, StorageStore } from "./type";
 pathify.options.mapping = "simple";
+
+import VuexPersist from "vuex-persist";
+
+const vuexPersist = new VuexPersist({
+  key: "iotex-studio",
+  storage: window.localStorage,
+  modules: ["storage"]
+});
 
 const state = {};
 
@@ -13,13 +22,15 @@ const mutations = make.mutations(state);
 Vue.use(Vuex);
 export default new Vuex.Store<{
   editor: EditorStore;
+  storage: StorageStore;
 }>({
-  plugins: [pathify.plugin],
+  plugins: [pathify.plugin, vuexPersist.plugin],
   //@ts-ignore
   state,
   mutations,
   actions: {},
   modules: {
-    editor
+    editor,
+    storage
   }
 });

@@ -1,6 +1,6 @@
 <template lang="pug">
-  .terminal
-    .content(:style="{height: height, width: width}")
+  .terminal.flex.flex-col.h-full
+    .content.flex-1
       .flex.flex-col-reverse.h-full.overflow-auto
         .item(v-for="(item,index) in stdout" :key="index")
           div(@click="item.expanded = !item.expanded") 
@@ -29,9 +29,6 @@ import { eventBus } from "../utils/eventBus";
 
 @Component
 export default class Term extends Vue {
-  @Prop({ type: String }) height: string;
-  @Prop({ type: String }) width: string;
-
   input = null;
   stdin = [];
   stdout = [];

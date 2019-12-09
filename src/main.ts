@@ -3,21 +3,24 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import "./components";
+import "./utils/filter";
+import { _ } from "./utils/lodash";
+
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
-import { _ } from "./utils/lodash";
-import VueClipboard from "vue-clipboard2";
 import lang from "element-ui/lib/locale/lang/en";
 import locale from "element-ui/lib/locale";
-import "./utils/filter";
+locale.use(lang);
+Vue.use(ElementUI);
+
+import VueClipboard from "vue-clipboard2";
+Vue.use(VueClipboard);
 
 import contentmenu from "v-contextmenu";
 Vue.use(contentmenu);
 
-locale.use(lang);
-
-Vue.use(VueClipboard);
-Vue.use(ElementUI);
+import VueSplit from "vue-split-panel";
+Vue.use(VueSplit);
 
 Vue.prototype.$_ = _;
 

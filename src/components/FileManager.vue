@@ -1,6 +1,6 @@
 <template lang="pug">
   .file-manager.flex.flex-col.relative
-    p.pb-4 File Explorers
+    p.pt-1.pb-2.text-sm File Explorer
     .flex.flex-col.flex-1.ml-2
       el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
         div.custom-tree-node.w-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
@@ -29,7 +29,6 @@
 
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import git from "isomorphic-git";
 import { FS, fs } from "@/utils/fs";
 import { defaultContract } from "@/utils/constant";
 import { Sync, Get } from "vuex-pathify";
@@ -39,7 +38,6 @@ import { eventBus } from "@/utils/eventBus";
 import { debounce } from "helpful-decorators";
 import { Helper } from "@/utils/helper";
 import * as path from "path";
-import { FuncBus } from "../utils/funcBus";
 
 //@ts-ignore
 BrowserFS.configure(
@@ -58,11 +56,13 @@ BrowserFS.configure(
 @Component
 export default class FileManager extends Vue {
   WriteFileType: Partial<{ path: string; content: string; ensure?: boolean }>;
+  @Sync("editor/ace@content") content: string;
   @Sync("editor/fileManager@curDir") curDir: string;
-  @Sync("editor/fileManager@curFilePath") curFilePath: string;
+  @Sync("storage/fileManager@curFilePath") curFilePath: string;
   @Sync("editor/fileManager@defaultFiles") defaultFiles: EditorStore["fileManager"]["defaultFiles"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Sync("editor/fileManager@filesLoaded") filesLoaded: EditorStore["fileManager"]["filesLoaded"];
+  @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
   name = "filemanager";
   fileManager: FS = new FS({});
@@ -89,26 +89,13 @@ export default class FileManager extends Vue {
     rules: { name: [{ required: true }] }
   };
 
-  loadConfig() {
-    const config = FuncBus.getConfig(this.name);
-    Object.assign(this, config);
-  }
-
-  @debounce(500)
-  saveConfig() {
-    const { curFilePath } = this;
-    FuncBus.setConfig(this.name, {
-      curFilePath
-    });
-  }
-
   setCurrentNode() {
     const filePath = this.curFilePath;
     //@ts-ignore
     const tree = this.$refs.tree as any;
     const node = tree.store.nodesMap[filePath];
     tree.setCurrentKey(filePath);
-    this.expandNode(node);
+    node && this.expandNode(node);
   }
 
   onContextMenuHide() {
@@ -233,10 +220,11 @@ export default class FileManager extends Vue {
     node.expanded = true;
   }
 
-  @Watch("curFilePath")
+  @Watch("curFile")
   oncurFilePathChange() {
-    this.setCurrentNode();
-    this.saveConfig();
+    this.$nextTick(() => {
+      this.setCurrentNode();
+    });
   }
 
   async created() {
@@ -244,14 +232,21 @@ export default class FileManager extends Vue {
       .on("fs.ready", async () => {
         await this.initProject();
         await this.loadFiles();
-        this.loadConfig();
       })
       .on("toolbar.tab.select", file => {
         this.curFilePath = file.path;
       })
+      .on("solc.compiled", () => {
+        this.writeFile({ path: this.curFilePath, content: this.content });
+      })
       .on("editor.content.update", async content => {
         this.files[this.curFilePath].content = content;
-        await this.writeFile({ path: this.curFilePath, content });
+      })
+      .on("menubar.newFile", () => {
+        this.showCreateNewFile(null, "file");
+      })
+      .on("menubar.newFolder", () => {
+        this.showCreateNewFile(null, "dir");
       });
   }
 }

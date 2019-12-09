@@ -1,5 +1,5 @@
 <template lang="pug">
-  div(:style="{height: height, width: width}")
+  div.h-full.w-full
 </template>
 
 <script lang="ts">
@@ -14,23 +14,25 @@ import { EditorStore } from "../store/type";
 
 @Component
 export default class Editor extends Vue {
-  @Prop({ type: String }) height: string;
-  @Prop({ type: String }) width: string;
-
   @Sync("editor/solc") solc: EditorStore["solc"];
   @Sync("editor/ace@editor") editor: ace.Editor;
   @Sync("editor/ace@theme") theme: string;
   @Sync("editor/ace@lang") lang: string;
   @Sync("editor/ace@options") options: any;
   @Sync("editor/ace@content") content: string;
-
-  @Sync("editor/fileManager@curFilePath") curFilePath: string;
+  @Sync("storage/fileManager@curFilePath") curFilePath: string;
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
-
   @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
   mounted() {
     this.initAceEditor();
+    eventBus
+      .on("menubar.undo", () => {
+        this.editor.undo();
+      })
+      .on("menubar.redo", () => {
+        this.editor.redo();
+      });
   }
   beforeDestory() {
     this.editor.destroy();
@@ -51,10 +53,7 @@ export default class Editor extends Vue {
 
     editor.setTheme(`ace/theme/${theme}`);
 
-    if (this.curFilePath) {
-      if (!this.curFile) return;
-      this.editor.session.setValue(this.curFile.content);
-    }
+    this.oncurFilePathNameChange();
 
     editor.on("change", () => {
       const content = editor.getValue();
@@ -85,16 +84,16 @@ export default class Editor extends Vue {
     this.editor.setOptions(val);
   }
 
-  @Watch("width")
-  @Watch("height")
+  @Watch("style")
   onLayoutChange(val) {
     this.$nextTick(() => {
       this.editor.resize();
     });
   }
 
-  @Watch("curFilePath")
+  @Watch("curFile")
   oncurFilePathNameChange() {
+    if (!this.curFile) return;
     this.editor.session.setValue(this.curFile.content);
   }
 }

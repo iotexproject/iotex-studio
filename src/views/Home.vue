@@ -1,22 +1,41 @@
 <template lang="pug">
-  .app.flex.justify-center.px-10
-    file-manager.file-manager.border-r
-    .editor.flex-1.flex.flex-col.p
-      toolbar.toolbar.border-b
-      editor.flex-auto(ref="editor" height='100%' width='100%')
-      terminal.border-t(height="300px" width="100%")
-    .plugin.px-2.border-l
-      compiler
-      el-divider
-      deployer
+  .app.flex.flex-col
+    menubar.menubar.border-b
+    Split.content.flex-1.flex.px-4.mt-1(@onDragEnd="size => setSplitSize('main', size)")
+      SplitArea(:size.sync="splitSize.main[0]")
+        file-manager.file-manager.border-r.h-full
+      SplitArea.flex.flex-col.w-full(:size.sync="splitSize.main[1]")
+        Split.flex.flex-col.w-full.flex-1(direction="vertical" @onDragEnd="size => setSplitSize('editor', size)")
+          toolbar.toolbar.border-b
+          SplitArea(:size="splitSize.editor[0]")
+            editor.w-full.flex-1(ref="editor")
+          SplitArea(:size="splitSize.editor[1]")
+            terminal.border-t
+      SplitArea.plugin.px-2.border-l.py-2(:size="splitSize.main[2]")
+        compiler
+        el-divider
+        deployer
 
 </template>
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
+import { StorageStore } from "../store/type";
+import { Sync } from "vuex-pathify";
+import { debounce } from "helpful-decorators";
 
 @Component
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  @Sync("storage/split@size") splitSize: StorageStore["split"]["size"];
+
+  @debounce(300)
+  setSplitSize(key, size) {
+    this.splitSize = {
+      ...this.splitSize,
+      [key]: size
+    };
+  }
+}
 </script>
 
 <style lang="stylus" scoped>
@@ -24,20 +43,18 @@ export default class Home extends Vue {}
 
 .app
   height 100vh
-  padding-top 40px
-  .file-manager
-    width 10vw
-    overflow auto
-    border-color color-dark-border
-  .toolbar
-    border-color color-dark-border
-    z-index 10
-  .terminal
-    border-color color-dark-border
-  .editor
-    width 70vw
-  .plugin
-    border-color color-dark-border
-    width 20vw
-    overflow auto
+  .menubar
+    background darken(color-dark, 15%)
+  .content
+    .file-manager
+      overflow auto
+      border-color color-dark-border
+    .toolbar
+      border-color color-dark-border
+      z-index 10
+    .terminal
+      border-color color-dark-border
+    .plugin
+      border-color color-dark-border
+      overflow auto
 </style>

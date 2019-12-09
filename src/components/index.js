@@ -6,6 +6,7 @@ import Deployer from "./Deployer.vue";
 import FileManager from "./FileManager.vue";
 import Terminal from "./Terminal.vue";
 import Toolbar from "./Toolbar.vue";
+import Menubar from "./Menubar.vue";
 
 Vue.component("editor", Editor);
 Vue.component("compiler", Compiler);
@@ -13,3 +14,4 @@ Vue.component("deployer", Deployer);
 Vue.component("file-manager", FileManager);
 Vue.component("terminal", Terminal);
 Vue.component("toolbar", Toolbar);
+Vue.component("menubar", Menubar);

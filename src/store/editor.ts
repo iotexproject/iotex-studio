@@ -1,11 +1,11 @@
 import { make } from "vuex-pathify";
 import * as constant from "../utils/constant";
 import { EditorStore } from "./type";
+import store from "@/store";
 
 const state: EditorStore = {
   fileManager: {
     curDir: "/project/default",
-    curFilePath: null,
     files: {},
     filesLoaded: [],
     defaultFiles: [
@@ -41,7 +41,7 @@ const state: EditorStore = {
 const getters: {
   [key: string]: (state: EditorStore) => any;
 } = {
-  curFile: state => state.fileManager.files[state.fileManager.curFilePath]
+  curFile: state => store.state.editor.fileManager.files[store.state.storage.fileManager.curFilePath]
 };
 const mutations = make.mutations(state);
 

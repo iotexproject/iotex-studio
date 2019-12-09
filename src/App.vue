@@ -30,6 +30,8 @@ div
     color color-dark-text
     background-color color-dark
     border-color color-dark-border
+  .gutter
+    background transparent
 body
   .el-button--text
     color grey

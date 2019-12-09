@@ -13,7 +13,6 @@ export interface StdoutType {
 export interface EditorStore {
   fileManager: {
     curDir: string;
-    curFilePath: string;
     file?: FS["file"];
     files: {
       [key: string]: EditorStore["fileManager"]["file"];
@@ -39,6 +38,23 @@ export interface EditorStore {
       releases: string[];
     };
     compileResult: Record<string, CompiledContract>;
+  };
+}
+
+export interface StorageStore {
+  split: {
+    size: {
+      main: number[];
+      editor: number[];
+    };
+  };
+  fileManager: {
+    curFilePath: string;
+  };
+  toolbar: {
+    tabs: {
+      [key: string]: Partial<FS["file"]>;
+    };
   };
 }
 
