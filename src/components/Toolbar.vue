@@ -16,12 +16,16 @@ import { FS } from "../utils/fs";
 @Component
 export default class Toolbar extends Vue {
   @Sync("storage/fileManager@curFilePath") curFilePath: string;
+  @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Sync("storage/toolbar@tabs.data") tabs: StorageStore["toolbar"]["tabs"];
 
   name = "toolbar";
 
   removeTab(name) {
     this.$delete(this.tabs, name);
+    if (!this.tabs[this.curFilePath]) {
+      this.nextTab();
+    }
   }
 
   nextTab() {
