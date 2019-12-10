@@ -3,8 +3,6 @@ import TypedEmitter from "typed-emitter";
 import ace from "brace";
 import { EditorStore, StdoutType } from "../store/type";
 import { FS } from "./fs";
-import store from "@/store";
-import * as path from "path";
 
 interface MessageEvents {
   "editor.init": (editor: ace.Editor) => void;
@@ -25,6 +23,7 @@ interface MessageEvents {
   "menubar.newFolder": () => void;
   "menubar.undo": () => void;
   "menubar.redo": () => void;
+  "menubar.saveAll": () => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;

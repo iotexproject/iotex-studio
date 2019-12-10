@@ -14,7 +14,6 @@
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir"  @click="showCreateNewFile(cursor.file, 'dir')") New Folder
       v-contextmenu-item(v-if="cursor.file" disabled @click="renameFile") Rename
       v-contextmenu-item(v-if="cursor.file" @click="deleteFile") Delete
-
     el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
       el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible")
         el-form-item(prop="name")
@@ -103,6 +102,10 @@ export default class FileManager extends Vue {
       file: null,
       isDir: false
     };
+  }
+
+  saveCurrentFile() {
+    this.writeFile({ path: this.curFilePath, content: this.content });
   }
 
   handleNodeContextMenu(e, node: FS["file"]) {
@@ -237,7 +240,7 @@ export default class FileManager extends Vue {
         this.curFilePath = file.path;
       })
       .on("solc.compiled", () => {
-        this.writeFile({ path: this.curFilePath, content: this.content });
+        this.saveCurrentFile();
       })
       .on("editor.content.update", async content => {
         this.files[this.curFilePath].content = content;
@@ -247,6 +250,9 @@ export default class FileManager extends Vue {
       })
       .on("menubar.newFolder", () => {
         this.showCreateNewFile(null, "dir");
+      })
+      .on("menubar.saveAll", () => {
+        this.saveCurrentFile();
       });
   }
 }

@@ -7,7 +7,7 @@
           span(slot="title") File
           el-menu-item(@click="newFile") New File
           el-menu-item(@click="newFolder") New Folder
-          el-menu-item(@click="newFolder") Save All
+          el-menu-item(@click="saveAll") Save All
         el-submenu(index="2" :show-timeout="0" :hide-timeout="0")
           span(slot="title") Edit
           el-menu-item(@click="undo") Undo
@@ -34,6 +34,9 @@ export default class Menubar extends Vue {
   }
   redo() {
     eventBus.emit("menubar.redo");
+  }
+  saveAll() {
+    eventBus.emit("menubar.saveAll");
   }
 }
 </script>
