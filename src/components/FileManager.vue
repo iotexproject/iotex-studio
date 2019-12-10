@@ -7,7 +7,7 @@
           div.el-tree-node_label
             el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
             el-icon.el-icon-document(v-if="!data.isDir")
-            span.ml-2.text-sm {{data.name}}
+            span.ml-2.text-sm.select-none {{data.name}}
       .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir" @click="showCreateNewFile(cursor.file, 'file')") New File
