@@ -2,10 +2,10 @@
   .deployer.flex.flex-col
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
-        el-select(v-model="currentEnvironment" )
+        el-select.w-full(v-model="currentEnvironment" )
           el-option(v-for="item in environments" :key="item" :label="item" :value="item")
       el-form-item(label="Account")
-        el-select(v-model="accountIndex")
+        el-select.w-full(v-model="accountIndex")
           el-option(v-for="(item, index) in accounts" :key="index" :label="accountLabel(item)" :value="index")
       el-form-item(label="Gas Limit")
         el-input(v-model="form.gasLimit" size="small")
@@ -17,7 +17,6 @@
       .contract.mt-4
         el-select.w-full(v-model="currentContractName")
           el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
-        
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract") Deploy
           el-input(:placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))" v-if="$_.get(currentContract, 'abi.constructor.0')"  v-model="deployForm.constructorInput")
@@ -29,12 +28,15 @@
         .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
           .flex.justify-between
             div.mb-2 {{contract.name}} at {{contract.address|truncate(12, "...")}}
-            div.cursor-pointer(@click="deleteContract(contract)")
-              el-icon.el-icon-delete
+            div.cursor-pointer
+              span(@click="copyText(contract.address)")
+                el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
+              span.ml-2(@click="deleteContract(contract)")
+                el-icon.el-icon-delete
           .flex.my-2(v-for="(func,index) in $_.get(contract, 'abi.function')" :key="index")
             el-button(@click="interactContract({func, contract })" style="width: 100px;min-width: 100px; height: 40px" size="small") {{func.name}}
-            div
-              el-input(v-if="func.inputs.length > 0" :placeholder="parseInputs(func)" v-model="func.datas")
+            div.flex-1
+              el-input.w-full(v-if="func.inputs.length > 0" :placeholder="parseInputs(func)" v-model="func.datas")
               p(v-for="(result, index) in  func.results" :key="index") {{index}} : {{result}}
 
         
@@ -97,6 +99,11 @@ export default class Deployer extends Vue {
   environment: "JavaScript VM" | "Injected ioPay";
   environments: Deployer["environment"][] = ["JavaScript VM", "Injected ioPay"];
   currentEnvironment: Deployer["environment"] = "JavaScript VM";
+
+  async copyText(text) {
+    await this.$copyText(text);
+    this.$message.success("Copied value to clipboard");
+  }
 
   async deployContractFromAddress() {
     try {

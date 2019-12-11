@@ -15,9 +15,9 @@
       v-contextmenu-item(v-if="cursor.file" disabled @click="renameFile") Rename
       v-contextmenu-item(v-if="cursor.file" @click="deleteFile") Delete
     el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
-      el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible")
+      el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible" @submit.native.prevent)
         el-form-item(prop="name")
-          el-input(v-model="createFileForm.name"  autofocus placeholder="file name")
+          el-input(v-model="createFileForm.name"  autofocus placeholder="file name" @keyup.enter.native="createNewFile")
       span(slot="footer")
         el-button(@click="createFileForm.visible= false") Cancel
         el-button(type="primary" @click="createNewFile") Confirm
