@@ -40,7 +40,7 @@ export default class Compiler extends Vue {
   async compile() {
     if (!this.solc.compiler) return;
     this.solc = { ...this.solc, ...{ compileLoading: true } };
-    const { path: filePath, content } = this.curFile;
+    const { path: filePath, content, name: fileName } = this.curFile;
 
     this.editor.session.clearAnnotations();
 
@@ -51,7 +51,7 @@ export default class Compiler extends Vue {
         const [row, column] = m.split(":");
         return {
           type: "error",
-          text: err.formattedMessage,
+          text: err.formattedMessage.replace("MyContract", fileName),
           row: row - 1,
           column
         };
