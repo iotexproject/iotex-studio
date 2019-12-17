@@ -18,7 +18,7 @@ const options = {
       }
     },
     module: {
-      noParse: /browserfs\.js/
+      noParse: [/browserfs\.js/]
     },
     plugins: [new ProvidePlugin({ BrowserFS: "bfsGlobal", process: "processGlobal", Buffer: "bufferGlobal" })],
     node: {
