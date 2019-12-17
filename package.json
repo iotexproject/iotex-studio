@@ -54,6 +54,7 @@
     "xterm-addon-web-links": "^0.2.1"
   },
   "devDependencies": {
+    "@types/compression": "^1.0.1",
     "@types/ace": "0.0.42",
     "@types/bluebird": "^3.5.29",
     "@types/ethereumjs-abi": "^0.6.3",
