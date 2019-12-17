@@ -1,8 +1,7 @@
 import express from "express";
 import serveStatic from "serve-static";
 import path from "path";
-// import compression from "compression";
-import compression from "shrink-ray";
+import compression from "shrink-ray-current";
 const app = express();
 app.use(compression()).use(serveStatic(__dirname + "/dist", { maxAge: 86400 * 1000 }));
 
