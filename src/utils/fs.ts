@@ -22,7 +22,7 @@ if (!fs.promises) {
 }
 
 export class FS {
-  file: { name: string; content: string | null; isDir: boolean; path: string; children: FS["files"] | null };
+  file: { name: string; content: string | null; edit?: boolean; editName?: string; isDir: boolean; path: string; children: FS["files"] | null };
   files: FS["file"][];
 
   constructor(props: Partial<FS>) {

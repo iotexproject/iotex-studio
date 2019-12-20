@@ -1,23 +1,24 @@
 <template lang="pug">
   .file-manager.flex.flex-col.relative
     p.pt-1.pb-2.text-sm File Explorer
-    .flex.flex-col.flex-1.ml-2
+    .file-explorer.flex.flex-col.flex-1.mx-2
       el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
-        div.custom-tree-node.w-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
-          div.el-tree-node_label
+        div.custom-tree-node.w-full.h-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
+          div.el-tree-node_label.h-full
             el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
             el-icon.el-icon-document(v-if="!data.isDir")
-            span.ml-2.text-sm.select-none {{data.name}}
+            el-input.edit-name(v-model="data.editName" v-if="data.edit" v-focus :placeholder="data.name" @blur="renameFile")
+            span.ml-2.text-sm.select-none(v-else) {{data.name}}
       .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir" @click="showCreateNewFile(cursor.file, 'file')") New File
       v-contextmenu-item(v-if="!cursor.file || cursor.isDir"  @click="showCreateNewFile(cursor.file, 'dir')") New Folder
-      v-contextmenu-item(v-if="cursor.file" disabled @click="renameFile") Rename
+      v-contextmenu-item(v-if="cursor.file" @click="startRenameFile(cursor.file)") Rename
       v-contextmenu-item(v-if="cursor.file" @click="deleteFile") Delete
-    el-dialog( :visible.sync="createFileForm.visible" title="Create new File" width="30%")
+    el-dialog(:visible.sync="createFileForm.visible" title="Create new File" width="30%")
       el-form(:model="createFileForm" ref="createFileForm" :rules="createFileForm.rules" v-if="createFileForm.visible" @submit.native.prevent)
         el-form-item(prop="name")
-          el-input(v-model="createFileForm.name"  autofocus placeholder="file name" @keyup.enter.native="createNewFile")
+          el-input(v-model="createFileForm.name" v-focus placeholder="file name" @keyup.enter.native="createNewFile")
       span(slot="footer")
         el-button(@click="createFileForm.visible= false") Cancel
         el-button(type="primary" @click="createNewFile") Confirm
@@ -74,6 +75,7 @@ export default class FileManager extends Vue {
     isDir: false
   };
 
+  curEditFile?: FS["file"] = null;
   createFileForm: {
     visible: boolean;
     name: string;
@@ -167,7 +169,22 @@ export default class FileManager extends Vue {
     });
   }
 
-  async renameFile() {}
+  async startRenameFile(file: FS["file"]) {
+    this.$set(file, "edit", true);
+    this.curEditFile = file;
+  }
+
+  async renameFile() {
+    const file = this.curEditFile;
+    this.$set(file, "edit", false);
+    if (!file.editName) return;
+    const dir = path.dirname(file.path);
+    const newFileName = file.editName.replace(".sol", "") + ".sol";
+    const newPath = `${dir}/${newFileName}`;
+    await fs.promises.rename(file.path, newPath);
+    this.curEditFile = null;
+    this.loadFiles();
+  }
 
   async deleteFile() {
     const { file } = this.cursor;
@@ -257,3 +274,15 @@ export default class FileManager extends Vue {
   }
 }
 </script>
+
+<style lang="stylus">
+.file-manager
+  .file-explorer
+    .edit-name
+      height 100%
+      background-color transparent
+    .el-input__inner
+      height 100%
+      border-radius 2px
+      padding 0 0.5rem
+</style>

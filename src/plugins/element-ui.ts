@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { Button, Select, Option, Form, FormItem, Icon, Divider, Tree, Tabs, Alert, Dialog, Input, Menu, MenuItem, Submenu, Message, TabPane } from "element-ui";
+import { Button, Select, Option, Form, FormItem, Icon, Divider, Tree, Tabs, Alert, Dialog, Input, Menu, MenuItem, Submenu, Message, TabPane, MessageBox } from "element-ui";
 
 import lang from "element-ui/lib/locale/lang/en";
 import locale from "element-ui/lib/locale";
@@ -24,3 +24,4 @@ Vue.use(Button)
 
 Vue.prototype.$alert = Alert;
 Vue.prototype.$message = Message;
+Vue.prototype.$msgbox = MessageBox;
