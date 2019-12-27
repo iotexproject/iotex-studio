@@ -64,6 +64,7 @@ export type CompiledContract = {
     inputs: {
       name: string;
       type: string;
+      value?: string;
     }[];
     outpus: {
       name: string;
@@ -74,6 +75,8 @@ export type CompiledContract = {
     stateMutability: string;
     type: string;
   }[];
+  showDetail?: boolean;
+  datas?: string;
   assembly: Object;
   binary: Object;
   compiler: Object;

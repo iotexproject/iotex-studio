@@ -51,7 +51,7 @@ body
     font-weight 500
     font-size 14px
   .el-menu--horizontal
-    margin-left 10px
+    margin-left 24px
     background transparent
     border none !important
     height 24px
@@ -63,6 +63,7 @@ body
     .el-submenu .el-submenu__title, .el-menu .el-menu-item
       height 24px
       line-height 24px
+      padding 0 12px
       background transparent
       border none
       color white

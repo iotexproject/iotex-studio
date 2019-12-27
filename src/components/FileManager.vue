@@ -7,7 +7,7 @@
           div.el-tree-node_label.h-full
             el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
             el-icon.el-icon-document(v-if="!data.isDir")
-            el-input.edit-name(v-model="data.editName" v-if="data.edit" v-focus :placeholder="data.name" @blur="renameFile")
+            el-input.edit-name(v-model="data.editName" v-if="data.edit" v-focus :placeholder="data.name" @blur="renameFile" @keyup.enter.native="renameFile")
             span.ml-2.text-sm.select-none(v-else) {{data.name}}
       .space.h-full(v-contextmenu:contextmenu)
     v-contextmenu(ref="contextmenu" @hide="onContextMenuHide")
@@ -126,6 +126,8 @@ export default class FileManager extends Vue {
 
   async initProject() {
     const { curDir } = this;
+    const exists = await this.fileManager.ensureDir(curDir);
+    if (exists) return;
     await this.writeFiles(this.defaultFiles);
   }
 

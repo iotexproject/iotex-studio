@@ -28,6 +28,7 @@ contract Array {
 }`;
 
 export const defaultTypeValue = {
+  address: "io000000000000000000000000000000000000000",
   uint256: "0",
   "uint256[]": "[]",
   string: "",

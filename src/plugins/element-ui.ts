@@ -25,3 +25,4 @@ Vue.use(Button)
 Vue.prototype.$alert = Alert;
 Vue.prototype.$message = Message;
 Vue.prototype.$msgbox = MessageBox;
+Vue.prototype.$confirm = MessageBox.confirm;
