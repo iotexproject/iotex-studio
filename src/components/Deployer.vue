@@ -45,7 +45,9 @@
               .flex.items-center.my-2(v-for="(input,index) in $_.get(func, 'inputs')" :key="index")
                 span.text-right(class="w-4/12") {{input.name}}: 
                 el-input.ml-2(v-model="input.value" size="mini" class="w-4/12" :placeholder="input.type")
-              .flex.justify-end
+              .flex.justify-end.items-center
+                span.mr-2(@click="copyDatafromFunc({func, contract})")
+                  el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
                 el-button(size="small" type="primary" @click="interactContract({func, contract, fromDetail: true })")
                   span(v-if="func.stateMutability == 'view'") call
                   span(v-else) transact
@@ -64,7 +66,7 @@
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
 import { Sync } from "vuex-pathify";
-import { EditorStore, CompiledContract } from "../store/type";
+import { EditorStore, CompiledContract, AbiFunc } from "../store/type";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import { jsvm } from "../utils/vm";
@@ -95,16 +97,19 @@ export default class Deployer extends Vue {
     constructorInput: null,
     atContractInput: null
   };
-  deployedContracts: {
-    [key: string]: {
-      name: string;
-      address: string;
-      visible: boolean;
-      abi: {
-        constructor: Deployer["abiFuncs"];
-        function: Deployer["abiFuncs"];
-      };
+  deployedContract: {
+    name: string;
+    address: string;
+    visible: boolean;
+    abiRaw: string;
+    provider: Deployer["environment"];
+    abi: {
+      constructor: Deployer["abiFuncs"];
+      function: Deployer["abiFuncs"];
     };
+  };
+  deployedContracts: {
+    [key: string]: Deployer["deployContract"];
   } = {};
 
   form = {
@@ -128,12 +133,30 @@ export default class Deployer extends Vue {
     this.$message.success("Copied value to clipboard");
   }
 
+  async copyDatafromFunc({ func, contract }: { func: AbiFunc; contract: Deployer["deployedContract"] }) {
+    try {
+      let data;
+      const { inputTypes, datas, method } = this.getFuncDatas({ func, fromDetail: true });
+      switch (contract.provider) {
+        case "JavaScript VM":
+          data = "0x" + jsvm.getData({ types: inputTypes, datas, method });
+          break;
+        case "Injected ioPay":
+          data = jsvm.getData({ types: inputTypes, datas, method });
+          break;
+      }
+      await this.copyText(data);
+    } catch (error) {
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+    }
+  }
+
   async deployContractFromAddress() {
     try {
       const { atContractInput: address } = this.deployForm;
       const { bytecode, name, abiRaw, abi } = this.currentContract;
-
-      this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false });
+      const contract: Deployer["deployedContract"] = { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false, provider: this.currentEnvironment };
+      this.$set(this.deployedContracts, address, contract);
     } catch (error) {
       eventBus.emit("term.message", { component: "alert", type: "error", text: error });
     }
@@ -194,7 +217,9 @@ export default class Deployer extends Vue {
             contractAddress: address
           }
         });
-        this.$set(this.deployedContracts, address, { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false });
+        const contract: Deployer["deployedContract"] = { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false, provider: this.currentEnvironment };
+        console.log(contract);
+        this.$set(this.deployedContracts, address, contract);
         this.reloadAccounts();
       }
     } catch (error) {
@@ -202,28 +227,32 @@ export default class Deployer extends Vue {
     }
   }
 
+  getFuncDatas({ func, fromDetail = false }: { func: AbiFunc; fromDetail?: boolean }) {
+    const { inputs, outputs, name: method, stateMutability } = func;
+    const inputTypes = inputs.map(i => i.type);
+    const outputTypes = outputs.map(i => i.type);
+    let datas;
+    if (fromDetail) {
+      datas = func.inputs.map(i => i.value || defaultTypeValue[i.type]);
+    } else {
+      datas = func.datas ? func.datas.split(",") : [];
+      inputTypes.forEach((o, i) => {
+        if (!datas[i]) {
+          datas[i] = defaultTypeValue[o];
+        }
+      });
+    }
+    return { method, inputTypes, outputTypes, datas, stateMutability };
+  }
+
   async interactContract({ func, contract, fromDetail }) {
     try {
       const { privateKey = "", address: callerAddress } = this.account;
       const { address: contractAddress, abiRaw } = contract;
-      const { inputs, outputs, stateMutability } = func;
       let { gasLimit, gasPrice } = this.form;
       const { value } = this;
-      const { name: method } = func;
 
-      const types = inputs.map(i => i.type);
-      const outputTypes = outputs.map(i => i.type);
-      let datas;
-      if (fromDetail) {
-        datas = func.inputs.map(i => i.value || defaultTypeValue[i.type]);
-      } else {
-        datas = func.datas ? func.datas.split(",") : [];
-        types.forEach((o, i) => {
-          if (!datas[i]) {
-            datas[i] = defaultTypeValue[o];
-          }
-        });
-      }
+      const { datas, inputTypes, outputTypes, method, stateMutability } = this.getFuncDatas({ func, fromDetail });
 
       let callFunc, err, result;
 
@@ -238,20 +267,20 @@ export default class Deployer extends Vue {
                 method,
                 contractAddress,
                 callerAddress,
-                types,
+                types: inputTypes,
                 datas
               })
             : jsvm.interactContract({
                 method,
                 senderPrivateKey,
                 contractAddress,
-                types,
+                types: inputTypes,
                 datas,
                 value,
                 gasLimit
               });
 
-          console.log({ method, senderPrivateKey, callerAddress, contractAddress, types, datas, value, gasLimit });
+          console.log({ method, senderPrivateKey, callerAddress, contractAddress, types: inputTypes, datas, value, gasLimit });
           [err, result] = await Helper.runAsync(callFunc);
           if (err) {
             console.error({ err });

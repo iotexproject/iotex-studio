@@ -100,6 +100,12 @@ export class JSVM {
     return result;
   }
 
+  getData({ types = [], datas = [], method }: { types?: string[]; datas?: string[]; method: string }) {
+    const params = abi.rawEncode(types, datas);
+    let data = abi.methodID(method, types).toString("hex") + params.toString("hex");
+    return data;
+  }
+
   async interactContract({
     gasLimit = 2000000,
     gasPrice = 1,
@@ -138,7 +144,7 @@ export class JSVM {
     const message = {
       senderAddress: `io${tx.getSenderAddress().toString("hex")}`,
       contractAddress,
-      data: tx.data.toString("hex")
+      data
     };
     eventBus.emit("term.info", {
       text: `call from: ${truncate(message.senderAddress, 12, "...")},to:${truncate(message.contractAddress, 12, "...")},data:${truncate(message.data, 12, "...")} `,

@@ -58,25 +58,27 @@ export interface StorageStore {
   };
 }
 
-export type CompiledContract = {
-  abi: {
-    constant: boolean;
-    inputs: {
-      name: string;
-      type: string;
-      value?: string;
-    }[];
-    outpus: {
-      name: string;
-      type: string;
-    }[];
+export type AbiFunc = {
+  constant: boolean;
+  inputs: {
     name: string;
-    payable: boolean;
-    stateMutability: string;
+    type: string;
+    value?: string;
+  }[];
+  outputs: {
+    name: string;
     type: string;
   }[];
-  showDetail?: boolean;
   datas?: string;
+  name: string;
+  payable: boolean;
+  stateMutability: string;
+  type: string;
+};
+
+export type CompiledContract = {
+  abi: AbiFunc[];
+  showDetail?: boolean;
   assembly: Object;
   binary: Object;
   compiler: Object;

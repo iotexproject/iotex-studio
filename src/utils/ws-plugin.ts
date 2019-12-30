@@ -32,7 +32,7 @@ export class WsSignerPlugin implements SignerPlugin {
 
   private readonly options: WsSignerPluginOptions;
 
-  constructor({ provider = "wss://local.get-scatter.com:64102", options = { retryCount: 3, retryDuration: 50 } }: { provider?: string; options: WsSignerPluginOptions }) {
+  constructor({ provider = "wss://local.get-scatter.com:64102", options = { retryCount: 3, retryDuration: 50, timeout: 5000 } }: { provider?: string; options: WsSignerPluginOptions }) {
     this.provider = provider;
 
     this.options = options;
@@ -46,7 +46,7 @@ export class WsSignerPlugin implements SignerPlugin {
       eventBus.emit("term.message", { text: "[antenna-ws] connected" });
     });
     this.ws.onClose.addListener = () => {
-      eventBus.emit("term.message", { text: "[antenna-ws] disconnected" });
+      eventBus.emit("term.warning", { text: "[antenna-ws] disconnected" });
     };
     await this.ws.open();
     return this;

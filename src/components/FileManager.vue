@@ -252,6 +252,7 @@ export default class FileManager extends Vue {
   async created() {
     eventBus
       .on("fs.ready", async () => {
+        console.timeEnd();
         await this.initProject();
         await this.loadFiles();
       })
