@@ -13,7 +13,7 @@
             terminal.border-t
       SplitArea.plugin.px-2.border-l.py-2(:size="splitSize.main[2]")
         compiler
-        el-divider
+        el-divider.mt-4.mb-2
         deployer
 
 </template>

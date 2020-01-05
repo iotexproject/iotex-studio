@@ -1,6 +1,6 @@
 <template lang="pug">
   .file-manager.flex.flex-col.relative
-    p.pt-1.pb-2.text-sm File Explorer
+    p.pt-1.pb-2.text-sm.font-bold FILE EXPLORERS
     .file-explorer.flex.flex-col.flex-1.mx-2
       el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
         div.custom-tree-node.w-full.h-full(slot-scope="{node, data}" v-contextmenu:contextmenu)

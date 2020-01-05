@@ -1,5 +1,6 @@
 <template lang="pug">
   .deployer.flex.flex-col
+    .flex.mb-2.text-sm.font-bold DEPLOY & RUN TRANSACTIONS
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
         el-select.w-full(v-model="currentEnvironment" )
@@ -14,7 +15,7 @@
           el-input(v-model="form.value" size="small")
           el-select(v-model="form.valueType" size="small")
             el-option(v-for="(item, index) in valueTypes" :key="index" :label="item" :value="item")
-      .contract.mt-4
+      .deploy-contract.mt-4
         el-select.w-full(v-model="currentContractName")
           el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
         .flex.mt-4(v-if="currentContract")
@@ -24,38 +25,38 @@
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") At Address
           el-input(placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
       .deplyed-contracts.mt-6.text-sm
-        .flex.mb-2.text-sm.font-bold Deployed Contracts
-        .p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
+        .flex.mb-2.text-xs.font-bold Deployed Contracts
+        .contract-list.p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
           .flex.justify-between.items-center
-            div(@click="$set(contract, 'showDetail', !contract.showDetail)")
-              span
+            .contract(@click="$set(contract, 'showDetail', !contract.showDetail)")
+              span.contract-title
                 el-icon.el-icon-arrow-up.cursor-pointer.ml-2(v-if="contract.showDetail" class="hover:text-blue-600" style="font-weight: bold;")
                 el-icon.el-icon-arrow-down.cursor-pointer.ml-2(v-else class="hover:text-blue-600" style="font-weight: bold;")
               span.ml-2 {{contract.name}} at {{contract.address|truncate(12, "...")}}
-            div.cursor-pointer
+            .contract-actions.cursor-pointer
               span(@click="copyText(contract.address)")
                 el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
               span.ml-2(@click="deleteContract(contract)")
                 el-icon.el-icon-delete(class="hover:text-blue-600" )
-          div.my-2(v-if="contract.showDetail" v-for="(func,index) in $_.get(contract, 'abi.function')" :key="index") 
-            .w-full.func-detail.py-1.px-1(v-if="func.showDetail")
-              .flex.justify-between.w-full.items-center(@click="$set(func, 'showDetail', !func.showDetail)")
+          .contract-func-list.my-4(v-if="contract.showDetail" v-for="(func,index) in $_.get(contract, 'abi.function')" :key="index") 
+            .func-full.w-full.func-detail.py-1.px-1(v-if="func.showDetail")
+              .func-name.flex.justify-between.w-full.items-center(@click="$set(func, 'showDetail', !func.showDetail)")
                 span {{func.name}}
                 el-icon.el-icon-arrow-up.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
-              .flex.items-center.my-2(v-for="(input,index) in $_.get(func, 'inputs')" :key="index")
+              .func-input-list.flex.items-center.my-2(v-for="(input,index) in $_.get(func, 'inputs')" :key="index")
                 span.text-right(class="w-4/12") {{input.name}}: 
                 el-input.ml-2(v-model="input.value" size="mini" class="w-4/12" :placeholder="input.type")
-              .flex.justify-end.items-center
+              .func-actions.flex.justify-end.items-center
                 span.mr-2(@click="copyDatafromFunc({func, contract})")
                   el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
                 el-button(size="small" type="primary" @click="interactContract({func, contract, fromDetail: true })")
                   span(v-if="func.stateMutability == 'view'") call
                   span(v-else) transact
-            .flex.items-center(v-else)
-              el-button(@click="interactContract({func, contract })" style="width: 100px;min-width: 100px;" size="small" type="primary") {{func.name}}
-              div.flex-1
+            .func-bar.flex.items-center(v-else)
+              el-button.func-action(@click="interactContract({func, contract })" style="width: 100px;min-width: 100px;" size="small" type="primary") {{func.name}}
+              .func-input.flex-1
                 el-input.w-full(v-if="func.inputs.length > 0" :placeholder="parseInputs(func)" v-model="func.datas" size="small")
-              span(@click="$set(func, 'showDetail', !func.showDetail)")
+              span.func-bar-actions(@click="$set(func, 'showDetail', !func.showDetail)")
                 el-icon.el-icon-arrow-down.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
             p(v-for="(result, index) in  func.results" :key="index") {{index}} : {{result}}
 

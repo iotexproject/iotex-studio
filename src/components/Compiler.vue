@@ -1,5 +1,6 @@
 <template lang="pug">
   .compiler.flex.flex-col
+    .flex.mb-2.text-sm.font-bold SOLIDITY COMPILER
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Compiler")
         el-select(v-model="solc.version")
