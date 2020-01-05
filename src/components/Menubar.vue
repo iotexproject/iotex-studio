@@ -2,7 +2,7 @@
   .menubar
     .flex.px-4.items-center
       span Iotex Studio
-      el-menu(mode="horizontal")
+      el-menu.menu(mode="horizontal")
         el-submenu(index="1" :show-timeout="0" :hide-timeout="0")
           span(slot="title") File
           el-menu-item(@click="newFile") New File
@@ -50,8 +50,9 @@ body
     color white
     font-weight 500
     font-size 14px
-  .el-menu--horizontal
+  .menu
     margin-left 24px
+  .el-menu--horizontal
     background transparent
     border none !important
     height 24px
