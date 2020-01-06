@@ -11,6 +11,7 @@ import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
 import { EditorStore } from "../store/type";
+import jsBeautify from "js-beautify";
 
 @Component
 export default class Editor extends Vue {
@@ -32,6 +33,10 @@ export default class Editor extends Vue {
       })
       .on("menubar.redo", () => {
         this.editor.redo();
+      })
+      .on("editor.save", () => {
+        const content = jsBeautify(this.curFile.content, { indent_size: 4 });
+        this.editor.session.setValue(content);
       });
   }
   beforeDestory() {
@@ -65,10 +70,6 @@ export default class Editor extends Vue {
     }
   }
 
-  @Watch("value")
-  onValueChange(val) {
-    this.editor.session.setValue(val);
-  }
   @Watch("theme")
   onThemeChange(val) {
     this.editor.setTheme(`ace/theme/${val}`);

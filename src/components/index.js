@@ -7,6 +7,7 @@ import FileManager from "./FileManager.vue";
 import Terminal from "./Terminal.vue";
 import Toolbar from "./Toolbar.vue";
 import Menubar from "./Menubar.vue";
+import StatusBar from "./Statusbar.vue";
 
 Vue.component("editor", Editor);
 Vue.component("compiler", Compiler);
@@ -15,3 +16,4 @@ Vue.component("file-manager", FileManager);
 Vue.component("terminal", Terminal);
 Vue.component("toolbar", Toolbar);
 Vue.component("menubar", Menubar);
+Vue.component("statusbar", StatusBar);

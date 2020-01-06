@@ -5,6 +5,7 @@ import { EditorStore, StdoutType } from "../store/type";
 import { FS } from "./fs";
 
 interface MessageEvents {
+  "editor.save": () => void;
   "editor.init": (editor: ace.Editor) => void;
   "editor.content.update": (content: string) => void;
   "solc.compile": () => void;
@@ -37,7 +38,7 @@ eventBus.on("editor.init", editor => {
     name: "SaveAndCompile",
     bindKey: { win: "Ctrl-S", mac: "Command-S" },
     exec: () => {
-      eventBus.emit("solc.compile");
+      eventBus.emit("editor.save");
     }
   });
 });

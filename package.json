@@ -9,6 +9,7 @@
     "start": "ts-node -T ./server.ts"
   },
   "dependencies": {
+    "@types/js-beautify": "^1.8.1",
     "ace-mode-solidity": "^0.1.1",
     "bluebird": "^3.7.1",
     "brace": "^0.11.1",
@@ -25,6 +26,7 @@
     "fs.promises": "^0.1.2",
     "helpful-decorators": "^2.0.5",
     "iotex-antenna": "^0.26.0",
+    "js-beautify": "^1.10.2",
     "lodash": "^4.17.15",
     "module": "^1.2.5",
     "promise-retry": "^1.1.1",

@@ -128,9 +128,13 @@ export default class Compiler extends Vue {
 
   created() {
     this.initSolc();
-    eventBus.on("solc.compile", () => {
-      this.compile();
-    });
+    eventBus
+      .on("solc.compile", () => {
+        this.compile();
+      })
+      .on("editor.save", () => {
+        this.compile();
+      });
   }
 }
 </script>
