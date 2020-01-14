@@ -11,6 +11,18 @@ export const wsSigner = new WsSignerPlugin({
   }
 });
 
+export class AntennaUtils {
+  static getProdiver(name: string) {
+    if (name == "mainnet") {
+      return "https://api.iotex.one:443";
+    } else if (name == "testnet") {
+      return "https://api.testnet.iotex.one:443";
+    } else {
+      return name;
+    }
+  }
+}
+
 export const antenna = new Antenna("https://api.testnet.iotex.one:443", {
   signer: wsSigner
 });

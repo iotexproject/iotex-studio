@@ -78,7 +78,7 @@ import abi from "ethereumjs-abi";
 import path from "path";
 import { defaultTypeValue } from "../utils/constant";
 import { Helper } from "../utils/helper";
-import { wsSigner, antenna } from "../utils/antenna";
+import { wsSigner, antenna, AntennaUtils } from "../utils/antenna";
 import { toRau } from "iotex-antenna/lib/account/utils";
 import retryPromise from "promise-retry";
 
@@ -191,10 +191,17 @@ export default class Deployer extends Vue {
         case "Injected ioPay":
           console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
 
-          actionHash = await antenna.iotx.deployContract(
+          const res = (await antenna.iotx.deployContract(
             { from: callerAddress, amount: String(value), data: Buffer.from(bytecode, "hex"), abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev") },
             ...datas
-          );
+          )) as any;
+          console.log(res);
+          actionHash = res.actionHash;
+          const providerName = _.get(res, "network.name");
+          if (providerName) {
+            antenna.setProvider(AntennaUtils.getProdiver(providerName));
+          }
+
           break;
       }
 

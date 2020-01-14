@@ -70,7 +70,7 @@ export class WsSignerPlugin implements SignerPlugin {
       origin: this.getOrigin()
     };
     const res = await this.ws.sendRequest(req);
-    return res.actionHash;
+    return res;
   }
 
   public async getAccount(address: string): Promise<Account> {
