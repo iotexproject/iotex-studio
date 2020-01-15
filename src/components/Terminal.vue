@@ -15,7 +15,7 @@
                   el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
     .input-bar.flex.px-2.w-full.items-center
       span >
-      el-input.input(v-model="input" @keyup.enter.native="runCommand")
+      el-input.input(v-model="input" @keyup.enter.native="runCommand" size="small")
     
 </template>
 
@@ -80,12 +80,12 @@ export default class Term extends Vue {
   .detail
     color #909399
   .input-bar
-    height 30px
+    height 24px
     background-color lighten(color-dark, 5)
     >>> .el-input__inner
       color white
-      height 30px
-      line-height 30px
+      height 24px
+      line-height 24px
       border none
       background-color lighten(color-dark, 5)
   >>> .el-alert

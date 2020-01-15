@@ -37,8 +37,11 @@ body
     color grey
   .el-form-item
     margin-bottom 0
+  .el-form-item__content
+    line-height 30px
   .el-form-item__label
     font-size 12px
+    line-height 30px
   .el-icon-caret-right
     display none
   .el-tree, .el-input_inner, .el-input, .el-input__inner, .el-select-dropdown, .el-popper, .el-form-item__label, .el-message-box, .v-contextmenu, .el-dialog

@@ -3,15 +3,15 @@
     .flex.mb-2.text-sm.font-bold DEPLOY & RUN TRANSACTIONS
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
-        el-select.w-full(v-model="currentEnvironment" )
+        el-select.mb-1.w-full(v-model="currentEnvironment" )
           el-option(v-for="item in environments" :key="item" :label="item" :value="item")
       el-form-item(label="Account")
-        el-select.w-full(v-model="accountIndex")
+        el-select.mb-1.w-full(v-model="accountIndex")
           el-option(v-for="(item, index) in accounts" :key="index" :label="accountLabel(item)" :value="index")
       el-form-item(label="Gas Limit")
-        el-input(v-model="form.gasLimit" size="small")
+        el-input.mb-1(v-model="form.gasLimit" size="small")
       el-form-item(label="Value")
-        .flex
+        .flex.mb-1
           el-input(v-model="form.value" size="small")
           el-select(v-model="form.valueType" size="small")
             el-option(v-for="(item, index) in valueTypes" :key="index" :label="item" :value="item")
