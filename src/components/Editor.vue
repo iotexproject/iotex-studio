@@ -33,11 +33,11 @@ export default class Editor extends Vue {
       })
       .on("menubar.redo", () => {
         this.editor.redo();
-      })
-      .on("editor.save", () => {
-        const content = jsBeautify(this.curFile.content, { indent_size: 4 });
-        this.editor.session.setValue(content);
       });
+    // .on("editor.save", () => {
+    //   const content = jsBeautify(this.curFile.content, { indent_size: 4, space_before_conditional: false, space_in_empty_paren: false, space_after_anon_function: false });
+    //   this.editor.session.setValue(content);
+    // });
   }
   beforeDestory() {
     this.editor.destroy();
