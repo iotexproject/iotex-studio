@@ -1,13 +1,11 @@
 {
   "defaultSeverity": "warning",
   "extends": ["tslint-config-prettier"],
-  "rulesDirectory": ["tslint-plugin-prettier"],
   "linterOptions": {
     "exclude": ["node_modules/**"]
   },
   "rules": {
     "indent": [true, "spaces", 2],
-    "prettier": true,
     "no-floating-promises": false,
     "promise-function-async": true,
     "await-promise": true

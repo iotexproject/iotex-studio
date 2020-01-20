@@ -11,7 +11,6 @@ import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
 import { EditorStore } from "../store/type";
-import { PrettierUtils } from "../utils/prettier";
 
 @Component
 export default class Editor extends Vue {
@@ -33,10 +32,6 @@ export default class Editor extends Vue {
       })
       .on("menubar.redo", () => {
         this.editor.redo();
-      })
-      .on("editor.save", () => {
-        const content = PrettierUtils.solidity(this.curFile.content);
-        this.editor.session.setValue(content);
       });
   }
   beforeDestory() {

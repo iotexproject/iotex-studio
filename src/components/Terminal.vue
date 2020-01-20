@@ -21,8 +21,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { FitAddon } from "xterm-addon-fit";
-import { WebLinksAddon } from "xterm-addon-web-links";
 import { Sync } from "vuex-pathify";
 import { EditorStore, StdoutType } from "../store/type";
 import { eventBus } from "../utils/eventBus";
