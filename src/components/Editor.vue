@@ -11,7 +11,7 @@ import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
 import { EditorStore } from "../store/type";
-import jsBeautify from "js-beautify";
+import { PrettierUtils } from "../utils/prettier";
 
 @Component
 export default class Editor extends Vue {
@@ -33,11 +33,11 @@ export default class Editor extends Vue {
       })
       .on("menubar.redo", () => {
         this.editor.redo();
+      })
+      .on("editor.save", () => {
+        const content = PrettierUtils.solidity(this.curFile.content);
+        this.editor.session.setValue(content);
       });
-    // .on("editor.save", () => {
-    //   const content = jsBeautify(this.curFile.content, { indent_size: 4, space_before_conditional: false, space_in_empty_paren: false, space_after_anon_function: false });
-    //   this.editor.session.setValue(content);
-    // });
   }
   beforeDestory() {
     this.editor.destroy();
