@@ -1655,6 +1655,13 @@ ajax-caching@^0.2.0:
   dependencies:
     kv-idb "^1.1.0"
 
+ajax-caching@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npm.taobao.org/ajax-caching/download/ajax-caching-0.3.0.tgz#351e7be8dc0601e962b2699843da6b72fa045e79"
+  integrity sha1-NR576NwGAelismmYQ9prcvoEXnk=
+  dependencies:
+    kv-idb "^1.1.0"
+
 ajv-errors@^1.0.0:
   version "1.0.1"
   resolved "https://registry.npm.taobao.org/ajv-errors/download/ajv-errors-1.0.1.tgz#f35986aceb91afadec4102fbd85014950cefa64d"
@@ -5859,7 +5866,7 @@ js-sha3@0.5.7:
 
 js-sha3@0.8.0:
   version "0.8.0"
-  resolved "https://registry.npm.taobao.org/js-sha3/download/js-sha3-0.8.0.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fjs-sha3%2Fdownload%2Fjs-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
+  resolved "https://registry.npm.taobao.org/js-sha3/download/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
   integrity sha1-ubel2nOvrX3t0PjEY5VMveaBiEA=
 
 js-sha3@^0.6.1:
@@ -6746,7 +6753,7 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
 
 "minimatch@2 || 3", minimatch@^3.0.4:
   version "3.0.4"
-  resolved "https://registry.npm.taobao.org/minimatch/download/minimatch-3.0.4.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fminimatch%2Fdownload%2Fminimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
+  resolved "https://registry.npm.taobao.org/minimatch/download/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   integrity sha1-UWbihkV/AzBgZL5Ul+jbsMPTIIM=
   dependencies:
     brace-expansion "^1.1.7"
@@ -9404,10 +9411,18 @@ solc-version@^0.2.0:
     ajax-caching "^0.2.0"
     lodash "^4.17.15"
 
-solc@^0.5.13:
-  version "0.5.13"
-  resolved "https://registry.npm.taobao.org/solc/download/solc-0.5.13.tgz#2a5ba2b7681898c6293759441e0a768fb6955def"
-  integrity sha1-Kluit2gYmMYpN1lEHgp2j7aVXe8=
+solc-version@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npm.taobao.org/solc-version/download/solc-version-0.3.0.tgz#daa8d7bcbee8f357c2c9307db139191eecc995d0"
+  integrity sha1-2qjXvL7o81fCyTB9sTkZHuzJldA=
+  dependencies:
+    ajax-caching "^0.3.0"
+    lodash "^4.17.15"
+
+solc@^0.6.3:
+  version "0.6.3"
+  resolved "https://registry.npm.taobao.org/solc/download/solc-0.6.3.tgz#e8aaa014b28a02c9f1b315135f7a7c9f1eae30c8"
+  integrity sha1-6KqgFLKKAsnxsxUTX3p8nx6uMMg=
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"
@@ -9426,6 +9441,15 @@ solcjs-core@^0.6.0:
     ajax-caching "^0.2.0"
     solc-import "^0.0.2"
     solc-version "^0.2.0"
+
+solcjs-core@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.npm.taobao.org/solcjs-core/download/solcjs-core-0.7.0.tgz#3b72a5ede4e00369449e33f71b8ea09e919c08de"
+  integrity sha1-O3Kl7eTgA2lEnjP3G46gnpGcCN4=
+  dependencies:
+    ajax-caching "^0.3.0"
+    solc-import "^0.0.2"
+    solc-version "^0.3.0"
 
 solidity-parser-antlr@^0.4.11:
   version "0.4.11"

@@ -401,6 +401,7 @@ export default class Deployer extends Vue {
       case "JavaScript VM":
         return this.initJSVM();
       case "Injected ioPay":
+        // eventBus.emit("term.info", )
         return this.initAntenna();
     }
   }
