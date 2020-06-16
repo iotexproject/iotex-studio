@@ -1,4 +1,4 @@
-# iotex-editor
+# IoTeX IDE
 
 ## Project setup
 ```
