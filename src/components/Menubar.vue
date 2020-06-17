@@ -1,7 +1,7 @@
 <template lang="pug">
   .menubar
     .flex.px-4.items-center
-      span Iotex Studio
+      span IoTeX Studio
       el-menu.menu(mode="horizontal")
         el-submenu(index="1" :show-timeout="0" :hide-timeout="0")
           span(slot="title") File

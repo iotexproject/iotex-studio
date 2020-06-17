@@ -24,6 +24,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { Sync } from "vuex-pathify";
 import { EditorStore, StdoutType } from "../store/type";
 import { eventBus } from "../utils/eventBus";
+import packageData from "../../package.json";
 
 @Component
 export default class Term extends Vue {
@@ -62,7 +63,7 @@ export default class Term extends Vue {
     this.writeLn({
       component: "alert",
       type: "info",
-      text: `  Welcome to Iotex Studio v0.0.1.`
+      text: `  Welcome to Iotex Studio v${packageData.version}`
     });
   }
 }

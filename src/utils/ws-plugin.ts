@@ -32,7 +32,7 @@ export class WsSignerPlugin implements SignerPlugin {
 
   private readonly options: WsSignerPluginOptions;
 
-  constructor({ provider = "wss://local.get-scatter.com:64102", options = { retryCount: 3, retryDuration: 50, timeout: 5000 } }: { provider?: string; options: WsSignerPluginOptions }) {
+  constructor({ provider = "wss://local.iotex.io:64102", options = { retryCount: 3, retryDuration: 50, timeout: 5000 } }: { provider?: string; options: WsSignerPluginOptions }) {
     this.provider = provider;
 
     this.options = options;
