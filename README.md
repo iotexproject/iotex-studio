@@ -1,4 +1,6 @@
-# IoTeX IDE
+<p align="center">
+  <img src="https://github.com/iotexproject/iotex-studio/blob/master/ide.png" width="480px">
+</p>
 
 ## Project setup
 ```
