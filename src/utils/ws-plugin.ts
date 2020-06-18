@@ -67,7 +67,7 @@ export class WsSignerPlugin implements SignerPlugin {
     const req: IRequest = {
       envelop: envelopString,
       type: "SIGN_AND_SEND",
-      origin: this.getOrigin()
+      origin: this.getOrigin(),
     };
     const res = await this.ws.sendRequest(req);
     return res;
@@ -82,7 +82,7 @@ export class WsSignerPlugin implements SignerPlugin {
   public async getAccounts(): Promise<Array<Account>> {
     await this.wait();
     const req = {
-      type: "GET_ACCOUNTS"
+      type: "GET_ACCOUNTS",
     };
     const res = await this.ws.sendRequest(req);
     return res.accounts;
@@ -99,6 +99,7 @@ export class WsSignerPlugin implements SignerPlugin {
     if (origin.substr(0, 4) === "www.") {
       origin = origin.replace("www.", "");
     }
+    console.log(origin);
     return origin;
   }
 }

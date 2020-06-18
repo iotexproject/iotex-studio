@@ -1,7 +1,7 @@
 <template lang="pug">
   .app.flex.flex-col
     menubar.menubar.border-b
-    Split.content.flex-1.flex.px-4.mt-1(@onDragEnd="size => setSplitSize('main', size)")
+    Split.content.flex-1.flex.mt-1(@onDragEnd="size => setSplitSize('main', size)")
       SplitArea(:size.sync="splitSize.main[0]")
         file-manager.file-manager.border-r.h-full
       SplitArea.flex.flex-col.w-full(:size.sync="splitSize.main[1]")

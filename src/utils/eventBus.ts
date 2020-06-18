@@ -1,4 +1,4 @@
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import TypedEmitter from "typed-emitter";
 import ace from "brace";
 import { EditorStore, StdoutType } from "../store/type";
@@ -25,6 +25,8 @@ interface MessageEvents {
   "menubar.undo": () => void;
   "menubar.redo": () => void;
   "menubar.saveAll": () => void;
+  "sharefolder.ws.connected": () => void;
+  "sharefolder.ws.closed": () => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;

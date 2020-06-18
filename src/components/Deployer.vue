@@ -366,7 +366,7 @@ export default class Deployer extends Vue {
       return eventBus.emit("term.message", {
         component: "alert",
         type: "error",
-        text: err
+        text: err.message
       });
     }
 

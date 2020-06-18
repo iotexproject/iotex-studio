@@ -1,9 +1,9 @@
 <template lang="pug">
   .file-manager.flex.flex-col.relative
-    p.pt-1.pb-2.text-sm.font-bold FILE EXPLORERS
-    .file-explorer.flex.flex-col.flex-1.mx-2
+    p.pt-1.pb-2.text-sm.font-bold.ml-4 FILE EXPLORERS
+    .file-explorer.flex.flex-col.flex-1
       el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
-        div.custom-tree-node.w-full.h-full(slot-scope="{node, data}" v-contextmenu:contextmenu)
+        div.custom-tree-node.w-full.h-full.px-4(slot-scope="{node, data}" v-contextmenu:contextmenu)
           div.el-tree-node_label.h-full
             el-icon(:class="[node.expanded? 'el-icon-folder-opened' : 'el-icon-folder']" v-if="data.isDir")
             el-icon.el-icon-document(v-if="!data.isDir")
@@ -38,6 +38,7 @@ import { eventBus } from "@/utils/eventBus";
 import { debounce } from "helpful-decorators";
 import { Helper } from "@/utils/helper";
 import * as path from "path";
+import { sf } from "../utils/sharefolder";
 
 //@ts-ignore
 BrowserFS.configure(
@@ -55,7 +56,7 @@ BrowserFS.configure(
 );
 @Component
 export default class FileManager extends Vue {
-  WriteFileType: Partial<{ path: string; content: string; ensure?: boolean }>;
+  WriteFileType: Partial<{ path: string; content: string; ensure?: boolean; force?: boolean }>;
   @Sync("editor/ace@content") content: string;
   @Sync("editor/fileManager@curDir") curDir: string;
   @Sync("storage/fileManager@curFilePath") curFilePath: string;
@@ -90,59 +91,50 @@ export default class FileManager extends Vue {
     rules: { name: [{ required: true }] }
   };
 
-  setCurrentNode() {
-    const filePath = this.curFilePath;
-    //@ts-ignore
-    const tree = this.$refs.tree as any;
-    const node = tree.store.nodesMap[filePath];
-    tree.setCurrentKey(filePath);
-    node && this.expandNode(node);
+  @Watch("curFile")
+  oncurFilePathChange() {
+    this.$nextTick(() => {
+      this.setCurrentNode();
+    });
   }
 
-  onContextMenuHide() {
-    this.cursor = {
-      file: null,
-      isDir: false
-    };
-  }
-
-  saveCurrentFile() {
-    this.writeFile({ path: this.curFilePath, content: this.content });
-  }
-
-  handleNodeContextMenu(e, node: FS["file"]) {
-    this.cursor = {
-      file: node,
-      isDir: node.isDir
-    };
-  }
-
-  handleNodeClick(node: FS["file"]) {
-    if (node.isDir) return;
-
-    this.curFilePath = node.path;
-    eventBus.emit("fs.select", this.files[node.path]);
+  async created() {
+    eventBus
+      .on("fs.ready", async () => {
+        await this.initProject();
+        await this.loadFiles();
+        await this.loadLocalhostFile();
+      })
+      .on("toolbar.tab.select", file => {
+        this.curFilePath = file.path;
+      })
+      .on("solc.compiled", () => {
+        this.saveCurrentFile();
+      })
+      .on("editor.content.update", async content => {
+        this.files[this.curFilePath].content = content;
+      })
+      .on("menubar.newFile", () => {
+        this.showCreateNewFile(null, "file");
+      })
+      .on("menubar.newFolder", () => {
+        this.showCreateNewFile(null, "dir");
+      })
+      .on("menubar.saveAll", () => {
+        this.saveCurrentFile();
+      })
+      .on("sharefolder.ws.closed", async () => {
+        await this.clearLocalhostHostFile();
+        await this.loadFiles();
+      });
   }
 
   async initProject() {
     const { curDir } = this;
     const exists = await this.fileManager.ensureDir(curDir);
-    if (exists) return;
-    await this.writeFiles(this.defaultFiles);
-  }
-
-  showCreateNewFile(file: FS["file"], type: any) {
-    this.createFileForm = {
-      ...this.createFileForm,
-      visible: true,
-      type,
-      target: file
-        ? { ...file }
-        : {
-            isDir: true,
-            path: this.curDir
-          }
-    };
+    if (!exists) {
+      await this.writeFiles(this.defaultFiles);
+    }
   }
 
   async createNewFile() {
@@ -232,6 +224,26 @@ export default class FileManager extends Vue {
     }
   }
 
+  async clearLocalhostHostFile() {
+    const localhostDir = `${this.curDir}/localhost`;
+    if (await this.fileManager.ensureDir(localhostDir)) {
+      await this.fileManager.rm(localhostDir);
+    }
+  }
+
+  async loadLocalhostFile() {
+    await this.clearLocalhostHostFile();
+    const files = await sf.dir();
+    if (files) {
+      const fileList = Object.keys(files).filter(i => !i.includes(".git"));
+      for (let path of fileList) {
+        const data = await sf.get({ path });
+        await this.writeFile({ path: `${this.curDir}/localhost/${path}`, content: data.content, ensure: true });
+      }
+      await this.loadFiles();
+    }
+  }
+
   expandNode(node) {
     //@ts-ignore
     if (node.parent) {
@@ -242,38 +254,52 @@ export default class FileManager extends Vue {
     node.expanded = true;
   }
 
-  @Watch("curFile")
-  oncurFilePathChange() {
-    this.$nextTick(() => {
-      this.setCurrentNode();
-    });
+  setCurrentNode() {
+    const filePath = this.curFilePath;
+    //@ts-ignore
+    const tree = this.$refs.tree as any;
+    const node = tree.store.nodesMap[filePath];
+    tree.setCurrentKey(filePath);
+    node && this.expandNode(node);
   }
 
-  async created() {
-    eventBus
-      .on("fs.ready", async () => {
-        console.timeEnd();
-        await this.initProject();
-        await this.loadFiles();
-      })
-      .on("toolbar.tab.select", file => {
-        this.curFilePath = file.path;
-      })
-      .on("solc.compiled", () => {
-        this.saveCurrentFile();
-      })
-      .on("editor.content.update", async content => {
-        this.files[this.curFilePath].content = content;
-      })
-      .on("menubar.newFile", () => {
-        this.showCreateNewFile(null, "file");
-      })
-      .on("menubar.newFolder", () => {
-        this.showCreateNewFile(null, "dir");
-      })
-      .on("menubar.saveAll", () => {
-        this.saveCurrentFile();
-      });
+  onContextMenuHide() {
+    this.cursor = {
+      file: null,
+      isDir: false
+    };
+  }
+
+  saveCurrentFile() {
+    this.writeFile({ path: this.curFilePath, content: this.content });
+  }
+
+  handleNodeContextMenu(e, node: FS["file"]) {
+    this.cursor = {
+      file: node,
+      isDir: node.isDir
+    };
+  }
+
+  handleNodeClick(node: FS["file"]) {
+    if (node.isDir) return;
+
+    this.curFilePath = node.path;
+    eventBus.emit("fs.select", this.files[node.path]);
+  }
+
+  showCreateNewFile(file: FS["file"], type: any) {
+    this.createFileForm = {
+      ...this.createFileForm,
+      visible: true,
+      type,
+      target: file
+        ? { ...file }
+        : {
+            isDir: true,
+            path: this.curDir
+          }
+    };
   }
 }
 </script>
