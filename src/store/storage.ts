@@ -22,7 +22,7 @@ const state: {
   };
 } = {
   solc: {
-    version: "v0.5.0-stable-2018.11.13",
+    version: "v0.5.5-stable-2019.03.08",
   },
   split: {
     size: {

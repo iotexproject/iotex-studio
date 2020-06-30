@@ -108,7 +108,7 @@ export default class FileManager extends Vue {
       .on("fs.ready", async () => {
         await this.initProject();
         await this.loadFiles();
-        if (this.curLinkStatus == "connected") {
+        if (this.curLinkStatus !== "init") {
           await this.loadLocalhostFile();
         }
       })
