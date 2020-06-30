@@ -10,7 +10,7 @@ import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
-import { EditorStore } from "../store/type";
+import { EditorStore } from "../store/editor";
 
 @Component
 export default class Editor extends Vue {

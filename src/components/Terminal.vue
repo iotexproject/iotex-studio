@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { Sync } from "vuex-pathify";
-import { EditorStore, StdoutType } from "../store/type";
+import { StdoutType } from "../store/type";
 import { eventBus } from "../utils/eventBus";
 import packageData from "../../package.json";
 
@@ -47,23 +47,23 @@ export default class Term extends Vue {
 
   created() {
     eventBus
-      .on("term.message", message => {
+      .on("term.message", (message) => {
         this.writeLn(message);
       })
-      .on("term.messages", messages => {
-        messages.forEach(i => this.writeLn(i));
+      .on("term.messages", (messages) => {
+        messages.forEach((i) => this.writeLn(i));
       })
-      .on("term.error", message => this.writeLn({ component: "alert", type: "error", ...message }))
-      .on("term.success", message => this.writeLn({ component: "alert", type: "success", ...message }))
-      .on("term.warning", message => this.writeLn({ component: "alert", type: "warning", ...message }))
-      .on("term.info", message => this.writeLn({ component: "alert", type: "info", ...message }));
+      .on("term.error", (message) => this.writeLn({ component: "alert", type: "error", ...message }))
+      .on("term.success", (message) => this.writeLn({ component: "alert", type: "success", ...message }))
+      .on("term.warning", (message) => this.writeLn({ component: "alert", type: "warning", ...message }))
+      .on("term.info", (message) => this.writeLn({ component: "alert", type: "info", ...message }));
   }
 
   mounted() {
     this.writeLn({
       component: "alert",
       type: "info",
-      text: `  Welcome to Iotex Studio v${packageData.version}`
+      text: `  Welcome to Iotex Studio v${packageData.version}`,
     });
   }
 }

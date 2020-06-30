@@ -1,17 +1,48 @@
 import { make } from "vuex-pathify";
 import * as constant from "../utils/constant";
-import { EditorStore } from "./type";
 import store from "@/store";
+import { FS } from "../utils/fs";
+import ace from "brace";
+import { CompiledContract } from "./type";
 
-const state: EditorStore = {
+const state: {
+  fileManager: {
+    curDir: string;
+    file?: FS["file"];
+    files: {
+      [key: string]: FS["file"];
+    };
+    filesLoaded: FS["files"];
+    defaultFiles: { path: string; content: string; ensure: boolean }[];
+  };
+  ace: {
+    content: string;
+    editor: ace.Editor;
+    theme: string;
+    lang: string;
+    options: any;
+  };
+  solc: {
+    version: string;
+    loading: boolean;
+    compileLoading: boolean;
+    compiler: any;
+    versions: {
+      all: string[];
+      nightly: string[];
+      releases: string[];
+    };
+    compileResult: Record<string, CompiledContract>;
+  };
+} = {
   fileManager: {
     curDir: "/project/default",
     files: {},
     filesLoaded: [],
     defaultFiles: [
-      { path: "/project/default/test.sol", content: constant.defaultContract, ensure: true }
+      { path: "/project/default/test.sol", content: constant.defaultContract, ensure: true },
       // { path: "/project/default/erc20/erc20.sol", content: constant.erc20, ensure: true }
-    ]
+    ],
   },
   ace: {
     content: "",
@@ -20,9 +51,9 @@ const state: EditorStore = {
     lang: "solidity",
     options: {
       enableBasicAutocompletion: true,
-      enableLiveAutocompletion: true
+      enableLiveAutocompletion: true,
       // enableSnippets: true
-    }
+    },
   },
   solc: {
     version: "v0.5.0-stable-2018.11.13",
@@ -32,16 +63,18 @@ const state: EditorStore = {
     versions: {
       all: [],
       nightly: [],
-      releases: []
+      releases: [],
     },
-    compileResult: {}
-  }
+    compileResult: {},
+  },
 };
+
+export type EditorStore = typeof state;
 
 const getters: {
   [key: string]: (state: EditorStore) => any;
 } = {
-  curFile: state => store.state.editor.fileManager.files[store.state.storage.fileManager.curFilePath]
+  curFile: (state) => store.state.editor.fileManager.files[store.state.storage.fileManager.curFilePath],
 };
 const mutations = make.mutations(state);
 
@@ -49,5 +82,5 @@ export default {
   namespaced: true,
   getters,
   mutations,
-  state
+  state,
 };

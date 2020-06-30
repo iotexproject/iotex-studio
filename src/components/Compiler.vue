@@ -24,9 +24,10 @@ import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import solcjs from "solc-js";
 import { Helper } from "../utils/helper";
-import { EditorStore } from "../store/type";
 import { SolcmManager } from "../utils/solc";
 import * as path from "path";
+import { EditorStore } from "../store/editor";
+import { app } from "../utils";
 
 @Component
 export default class Compiler extends Vue {
@@ -71,7 +72,7 @@ export default class Compiler extends Vue {
           })
         );
         this.editor.session.setAnnotations(errs);
-        this.solc.compileLoading =false
+        this.solc.compileLoading = false;
         return;
       }
 
@@ -95,7 +96,7 @@ export default class Compiler extends Vue {
   }
 
   async initSolc() {
-    const [err, versions] = await Helper.runAsync(solcjs.versions());
+    const [err, versions] = await app.helper.runAsync(solcjs.versions());
     if (err) {
       return eventBus.emit("term.error", {
         text: `load solc compiler versions failed: ${err}`,

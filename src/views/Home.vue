@@ -20,9 +20,9 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
-import { StorageStore } from "../store/type";
 import { Sync } from "vuex-pathify";
 import { debounce } from "helpful-decorators";
+import { StorageStore } from "../store/storage";
 
 @Component
 export default class Home extends Vue {
@@ -32,7 +32,7 @@ export default class Home extends Vue {
   setSplitSize(key, size) {
     this.splitSize = {
       ...this.splitSize,
-      [key]: size
+      [key]: size,
     };
   }
 }

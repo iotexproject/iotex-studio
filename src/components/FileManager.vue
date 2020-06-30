@@ -1,6 +1,9 @@
 <template lang="pug">
   .file-manager.flex.flex-col.relative
-    p.pt-1.pb-2.text-sm.font-bold.ml-4 FILE EXPLORERS
+    p.pt-1.pb-2.text-sm.font-bold.ml-4.flex.items-center
+      span FILE EXPLORERS
+      span.px-4.cursor-pointer(style="margin-left: auto")
+        i.el-icon-link(title="link sharefolder" class="hover:text-teal-400")
     .file-explorer.flex.flex-col.flex-1
       el-tree(:data="filesLoaded" ref="tree" node-key="path" highlight-current default-expand-all :props="{label: 'name'}" @node-click="handleNodeClick" @node-contextmenu="handleNodeContextMenu")
         div.custom-tree-node.w-full.h-full.px-4(slot-scope="{node, data}" v-contextmenu:contextmenu)
@@ -32,13 +35,14 @@ import { Vue, Component, Watch } from "vue-property-decorator";
 import { FS, fs } from "@/utils/fs";
 import { defaultContract } from "@/utils/constant";
 import { Sync, Get } from "vuex-pathify";
-import { EditorStore } from "@/store/type";
 import { _ } from "@/utils/lodash";
 import { eventBus } from "@/utils/eventBus";
 import { debounce } from "helpful-decorators";
 import { Helper } from "@/utils/helper";
 import * as path from "path";
 import { sf } from "../utils/sharefolder";
+import { EditorStore } from "../store/editor";
+import { app } from "../utils";
 
 //@ts-ignore
 BrowserFS.configure(
@@ -46,10 +50,10 @@ BrowserFS.configure(
     fs: "MountableFileSystem",
     options: {
       "/": { fs: "IndexedDB", options: {} },
-      "/tmp": { fs: "InMemory" }
-    }
+      "/tmp": { fs: "InMemory" },
+    },
   },
-  e => {
+  (e) => {
     if (e) console.error(e);
     eventBus.emit("fs.ready");
   }
@@ -73,7 +77,7 @@ export default class FileManager extends Vue {
     isDir: boolean;
   } = {
     file: null,
-    isDir: false
+    isDir: false,
   };
 
   curEditFile?: FS["file"] = null;
@@ -88,7 +92,7 @@ export default class FileManager extends Vue {
     name: "",
     type: "file",
     target: null,
-    rules: { name: [{ required: true }] }
+    rules: { name: [{ required: true }] },
   };
 
   @Watch("curFile")
@@ -105,13 +109,13 @@ export default class FileManager extends Vue {
         await this.loadFiles();
         await this.loadLocalhostFile();
       })
-      .on("toolbar.tab.select", file => {
+      .on("toolbar.tab.select", (file) => {
         this.curFilePath = file.path;
       })
       .on("solc.compiled", () => {
         this.saveCurrentFile();
       })
-      .on("editor.content.update", async content => {
+      .on("editor.content.update", async (content) => {
         this.files[this.curFilePath].content = content;
       })
       .on("menubar.newFile", () => {
@@ -139,7 +143,7 @@ export default class FileManager extends Vue {
 
   async createNewFile() {
     //@ts-ignore
-    this.$refs.createFileForm.validate(async valid => {
+    this.$refs.createFileForm.validate(async (valid) => {
       if (!valid) return;
       const { name, target, type } = this.createFileForm;
 
@@ -158,7 +162,7 @@ export default class FileManager extends Vue {
       this.createFileForm = {
         ...this.createFileForm,
         visible: false,
-        name: ""
+        name: "",
       };
     });
   }
@@ -183,17 +187,17 @@ export default class FileManager extends Vue {
   async deleteFile() {
     const { file } = this.cursor;
     if (!file) return;
-    const [err] = await Helper.runAsync(
+    const [err] = await app.helper.runAsync(
       this.$msgbox({
         title: `Delete a ${file.isDir ? "Folder" : "File"}`,
         message: `Are you sure you want to delete this ${file.isDir ? "Folder" : "File"}?`,
         showCancelButton: true,
-        confirmButtonText: "OK"
+        confirmButtonText: "OK",
       })
     );
     if (err)
       return eventBus.emit("term.error", {
-        text: err.message
+        text: err.message,
       });
     await this.fileManager.rm(file.path);
     await this.loadFiles();
@@ -203,9 +207,9 @@ export default class FileManager extends Vue {
     const { curDir } = this;
     const fileMapping: EditorStore["fileManager"]["files"] = {};
     let files = await this.fileManager.list(curDir, {
-      onFile: async data => {
+      onFile: async (data) => {
         fileMapping[data.path] = data;
-      }
+      },
     });
     this.files = fileMapping;
     this.filesLoaded = files;
@@ -235,7 +239,7 @@ export default class FileManager extends Vue {
     await this.clearLocalhostHostFile();
     const files = await sf.dir();
     if (files) {
-      const fileList = Object.keys(files).filter(i => !i.includes(".git"));
+      const fileList = Object.keys(files).filter((i) => !i.includes(".git"));
       for (let path of fileList) {
         const data = await sf.get({ path });
         await this.writeFile({ path: `${this.curDir}/localhost/${path}`, content: data.content, ensure: true });
@@ -266,7 +270,7 @@ export default class FileManager extends Vue {
   onContextMenuHide() {
     this.cursor = {
       file: null,
-      isDir: false
+      isDir: false,
     };
   }
 
@@ -277,7 +281,7 @@ export default class FileManager extends Vue {
   handleNodeContextMenu(e, node: FS["file"]) {
     this.cursor = {
       file: node,
-      isDir: node.isDir
+      isDir: node.isDir,
     };
   }
 
@@ -297,8 +301,8 @@ export default class FileManager extends Vue {
         ? { ...file }
         : {
             isDir: true,
-            path: this.curDir
-          }
+            path: this.curDir,
+          },
     };
   }
 }

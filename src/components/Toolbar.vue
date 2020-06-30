@@ -9,9 +9,10 @@ import { Vue, Component } from "vue-property-decorator";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import { debounce } from "helpful-decorators";
-import { EditorStore, StorageStore } from "../store/type";
 import { Sync } from "vuex-pathify";
 import { FS } from "../utils/fs";
+import { StorageStore } from "../store/storage";
+import { EditorStore } from "../store/editor";
 
 @Component
 export default class Toolbar extends Vue {
@@ -39,12 +40,12 @@ export default class Toolbar extends Vue {
 
   created() {
     eventBus
-      .on("fs.select", file => {
+      .on("fs.select", (file) => {
         const { path, name } = file;
         this.tabs = { ...this.tabs, [path]: { path, name } };
       })
-      .on("fs.loadFiles", files => {
-        Object.keys(this.tabs).forEach(i => {
+      .on("fs.loadFiles", (files) => {
+        Object.keys(this.tabs).forEach((i) => {
           if (!files[i]) {
             this.$delete(this.tabs, i);
           }

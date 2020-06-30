@@ -5,8 +5,9 @@ import { Account } from "iotex-antenna/lib/account/account";
 import { Envelop } from "iotex-antenna/lib/action/envelop";
 import { SignerPlugin } from "iotex-antenna/lib/action/method";
 import Options from "websocket-as-promised/types/options";
-import { PromiseHelper } from "./index";
 import { eventBus } from "./eventBus";
+import { Helper } from "./helper";
+import { app } from "./index";
 
 interface IRequest {
   reqId?: number;
@@ -54,7 +55,7 @@ export class WsSignerPlugin implements SignerPlugin {
 
   private async wait() {
     while (!this.ws.isOpened) {
-      await PromiseHelper.sleep(500);
+      await app.helper.sleep(500);
       if (!this.ws.isOpened) await this.init();
     }
     return Promise.resolve(true);

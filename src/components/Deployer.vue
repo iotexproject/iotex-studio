@@ -69,7 +69,7 @@
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
 import { Sync } from "vuex-pathify";
-import { EditorStore, CompiledContract, AbiFunc } from "../store/type";
+import { CompiledContract, AbiFunc } from "../store/type";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
 import { jsvm } from "../utils/vm";
@@ -83,6 +83,8 @@ import { Helper } from "../utils/helper";
 import { wsSigner, antenna, AntennaUtils } from "../utils/antenna";
 import { toRau } from "iotex-antenna/lib/account/utils";
 import retryPromise from "promise-retry";
+import { EditorStore } from "../store/editor";
+import { app } from "../utils";
 
 @Component
 export default class Deployer extends Vue {
@@ -106,7 +108,7 @@ export default class Deployer extends Vue {
     visible: boolean;
     abiRaw: string;
     environment: Deployer["environment"];
-    provider: Deployer["currentDeployProvider"];
+    provider?: Deployer["currentDeployProvider"];
     abi: {
       constructor: Deployer["abiFuncs"];
       function: Deployer["abiFuncs"];
@@ -297,7 +299,7 @@ export default class Deployer extends Vue {
               });
 
           console.log({ method, senderPrivateKey, callerAddress, contractAddress, types: inputTypes, datas, value, gasLimit });
-          [err, result] = await Helper.runAsync(callFunc);
+          [err, result] = await app.helper.runAsync(callFunc);
           if (err) {
             console.error({ err });
             return eventBus.emit("term.message", {
@@ -328,7 +330,7 @@ export default class Deployer extends Vue {
                 ...datas
               );
 
-          [err, result] = await Helper.runAsync(callFunc);
+          [err, result] = await app.helper.runAsync(callFunc);
 
           if (err) {
             console.error({ err });
@@ -371,7 +373,7 @@ export default class Deployer extends Vue {
   }
 
   async initAntenna() {
-    const [err, accounts] = await Helper.runAsync(wsSigner.getAccounts());
+    const [err, accounts] = await app.helper.runAsync(wsSigner.getAccounts());
     if (err) {
       return eventBus.emit("term.message", {
         component: "alert",
