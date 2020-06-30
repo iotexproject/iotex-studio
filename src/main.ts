@@ -16,6 +16,7 @@ import contentmenu from "v-contextmenu";
 Vue.use(contentmenu);
 
 import VueSplit from "vue-split-panel";
+import { ShareFolder } from "./utils/sharefolder";
 Vue.use(VueSplit);
 
 Vue.prototype.$_ = _;

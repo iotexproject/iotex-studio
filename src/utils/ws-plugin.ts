@@ -5,8 +5,9 @@ import { Account } from "iotex-antenna/lib/account/account";
 import { Envelop } from "iotex-antenna/lib/action/envelop";
 import { SignerPlugin } from "iotex-antenna/lib/action/method";
 import Options from "websocket-as-promised/types/options";
-import { PromiseHelper } from "./index";
 import { eventBus } from "./eventBus";
+import { Helper } from "./helper";
+import { app } from "./index";
 
 interface IRequest {
   reqId?: number;
@@ -54,7 +55,7 @@ export class WsSignerPlugin implements SignerPlugin {
 
   private async wait() {
     while (!this.ws.isOpened) {
-      await PromiseHelper.sleep(500);
+      await app.helper.sleep(500);
       if (!this.ws.isOpened) await this.init();
     }
     return Promise.resolve(true);
@@ -67,10 +68,20 @@ export class WsSignerPlugin implements SignerPlugin {
     const req: IRequest = {
       envelop: envelopString,
       type: "SIGN_AND_SEND",
-      origin: this.getOrigin()
+      origin: this.getOrigin(),
     };
     const res = await this.ws.sendRequest(req);
     return res;
+  }
+
+  public async readContract() {
+    await this.wait();
+    const req = {
+      type: "QUERY_PARAMS",
+      payload: { contractAddress: "io1xpvzahnl4h46f9ea6u03ec2hkusrzu020th8xx", method: "totalSupply" },
+    };
+    const res = await this.ws.sendRequest(req);
+    return res.accounts;
   }
 
   public async getAccount(address: string): Promise<Account> {
@@ -82,7 +93,7 @@ export class WsSignerPlugin implements SignerPlugin {
   public async getAccounts(): Promise<Array<Account>> {
     await this.wait();
     const req = {
-      type: "GET_ACCOUNTS"
+      type: "GET_ACCOUNTS",
     };
     const res = await this.ws.sendRequest(req);
     return res.accounts;
@@ -99,6 +110,7 @@ export class WsSignerPlugin implements SignerPlugin {
     if (origin.substr(0, 4) === "www.") {
       origin = origin.replace("www.", "");
     }
+    console.log(origin);
     return origin;
   }
 }

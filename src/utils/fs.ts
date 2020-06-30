@@ -2,8 +2,9 @@ import util from "util";
 import _fs, { stat } from "fs";
 import { Helper } from "./helper";
 import * as path from "path";
+import { app } from "./index";
 
-export const promisify = obj => {
+export const promisify = (obj) => {
   return new Proxy(obj, {
     get: (target, name) => {
       if (name in target) {
@@ -12,7 +13,7 @@ export const promisify = obj => {
         }
       }
       return target[name];
-    }
+    },
   });
 };
 
@@ -33,7 +34,7 @@ export class FS {
     if (ensure) await this.ensureDir(dir);
     const filesInDir = await fs.promises.readdir(dir);
     const files = await Promise.all(
-      filesInDir.map(async file => {
+      filesInDir.map(async (file) => {
         const filePath = path.join(dir, file);
         const stats = await fs.promises.stat(filePath);
         const isDir = stats.isDirectory();
@@ -43,7 +44,7 @@ export class FS {
           isDir,
           path: filePath,
           content: null,
-          children: null
+          children: null,
         };
         if (isDir) {
           data.children = await this.list(filePath, options);
@@ -61,7 +62,7 @@ export class FS {
   async ensureDir(dir) {
     if (dir == "/") return;
     //@ts-ignore
-    const [exists] = await Helper.runAsync(fs.promises.exists(dir));
+    const [exists] = await app.helper.runAsync(fs.promises.exists(dir));
     if (!exists) {
       await this.ensureDir(path.dirname(dir));
       await fs.promises.mkdir(dir);
@@ -71,7 +72,7 @@ export class FS {
   }
   async ensureWrite(filePath, content, options?) {
     await this.ensureDir(path.dirname(filePath));
-    const [err, stats] = await Helper.runAsync(fs.promises.stat(filePath));
+    const [err, stats] = await app.helper.runAsync(fs.promises.stat(filePath));
     if (err || !stats.isFile()) {
       await fs.promises.writeFile(filePath, content, options);
     }
@@ -81,7 +82,7 @@ export class FS {
   }
 
   async rm(path) {
-    const [err, stat] = await Helper.runAsync(fs.promises.lstat(path));
+    const [err, stat] = await app.helper.runAsync(fs.promises.lstat(path));
     if (err) throw err;
     if (stat.isDirectory()) {
       const files = await fs.promises.readdir(path);

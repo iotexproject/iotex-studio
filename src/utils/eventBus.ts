@@ -1,8 +1,9 @@
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import TypedEmitter from "typed-emitter";
 import ace from "brace";
-import { EditorStore, StdoutType } from "../store/type";
+import { StdoutType } from "../store/type";
 import { FS } from "./fs";
+import { EditorStore } from "../store/editor";
 
 interface MessageEvents {
   "editor.save": () => void;
@@ -25,11 +26,14 @@ interface MessageEvents {
   "menubar.undo": () => void;
   "menubar.redo": () => void;
   "menubar.saveAll": () => void;
+  "sharefolder.ws.connected": () => void;
+  "sharefolder.ws.closed": () => void;
+  "sharefolder.ws.error": (e: Error) => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;
 
-eventBus.on("editor.init", editor => {
+eventBus.on("editor.init", (editor) => {
   require("brace/ext/language_tools");
   require("brace/mode/javascript");
   require("ace-mode-solidity/build/remix-ide/mode-solidity");
@@ -39,6 +43,6 @@ eventBus.on("editor.init", editor => {
     bindKey: { win: "Ctrl-S", mac: "Command-S" },
     exec: () => {
       eventBus.emit("editor.save");
-    }
+    },
   });
 });

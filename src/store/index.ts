@@ -4,15 +4,16 @@ import editor from "./editor";
 import storage from "./storage";
 
 import pathify, { make } from "vuex-pathify";
-import { EditorStore, StorageStore } from "./type";
 pathify.options.mapping = "simple";
 
 import VuexPersist from "vuex-persist";
+import { StorageStore } from "./storage";
+import { EditorStore } from "./editor";
 
 const vuexPersist = new VuexPersist({
   key: "iotex-studio",
   storage: window.localStorage,
-  modules: ["storage"]
+  modules: ["storage"],
 });
 
 const state = {};
@@ -31,6 +32,6 @@ export default new Vuex.Store<{
   actions: {},
   modules: {
     editor,
-    storage
-  }
+    storage,
+  },
 });

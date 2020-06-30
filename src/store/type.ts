@@ -10,54 +10,6 @@ export interface StdoutType {
   expanded?: boolean;
 }
 
-export interface EditorStore {
-  fileManager: {
-    curDir: string;
-    file?: FS["file"];
-    files: {
-      [key: string]: EditorStore["fileManager"]["file"];
-    };
-    filesLoaded: FS["files"];
-    defaultFiles: { path: string; content: string; ensure: boolean }[];
-  };
-  ace: {
-    content: string;
-    editor: ace.Editor;
-    theme: string;
-    lang: string;
-    options: any;
-  };
-  solc: {
-    version: string;
-    loading: boolean;
-    compileLoading: boolean;
-    compiler: any;
-    versions: {
-      all: string[];
-      nightly: string[];
-      releases: string[];
-    };
-    compileResult: Record<string, CompiledContract>;
-  };
-}
-
-export interface StorageStore {
-  split: {
-    size: {
-      main: number[];
-      editor: number[];
-    };
-  };
-  fileManager: {
-    curFilePath: string;
-  };
-  toolbar: {
-    tabs: {
-      [key: string]: Partial<FS["file"]>;
-    };
-  };
-}
-
 export type AbiFunc = {
   constant: boolean;
   inputs: {
