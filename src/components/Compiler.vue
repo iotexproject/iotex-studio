@@ -128,7 +128,7 @@ export default class Compiler extends Vue {
     return this.solc.compileResult[this.currentContractName];
   }
 
-  @Watch("solc.version")
+  @Watch("version")
   async onSolcVersionChange(version = this.version) {
     this.solc = { ...this.solc, ...{ loading: true } };
 
