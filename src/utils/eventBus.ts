@@ -28,6 +28,7 @@ interface MessageEvents {
   "menubar.saveAll": () => void;
   "sharefolder.ws.connected": () => void;
   "sharefolder.ws.closed": () => void;
+  "sharefolder.ws.error": (e: Error) => void;
 }
 
 export const eventBus = new EventEmitter() as TypedEmitter<MessageEvents>;

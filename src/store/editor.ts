@@ -23,7 +23,6 @@ const state: {
     options: any;
   };
   solc: {
-    version: string;
     loading: boolean;
     compileLoading: boolean;
     compiler: any;
@@ -56,7 +55,6 @@ const state: {
     },
   },
   solc: {
-    version: "v0.5.0-stable-2018.11.13",
     loading: false,
     compileLoading: false,
     compiler: null,

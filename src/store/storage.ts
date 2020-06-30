@@ -2,6 +2,9 @@ import { make } from "vuex-pathify";
 import { FS } from "../utils/fs";
 
 const state: {
+  solc: {
+    version: string;
+  };
   split: {
     size: {
       main: number[];
@@ -18,6 +21,9 @@ const state: {
     };
   };
 } = {
+  solc: {
+    version: "v0.5.0-stable-2018.11.13",
+  },
   split: {
     size: {
       main: [10, 70, 20],

@@ -3,7 +3,7 @@
     .flex.mb-2.text-sm.font-bold SOLIDITY COMPILER
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Compiler")
-        el-select(v-model="solc.version")
+        el-select(v-model="version")
           el-option(v-for="item in solc.versions.releases" :key="item" :label="item" :value="item")
       div.mt-2.w-full
         el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile
@@ -28,10 +28,13 @@ import { SolcmManager } from "../utils/solc";
 import * as path from "path";
 import { EditorStore } from "../store/editor";
 import { app } from "../utils";
+import { StorageStore } from "../store/storage";
 
 @Component
 export default class Compiler extends Vue {
   @Sync("editor/solc") solc: EditorStore["solc"];
+  @Sync("storage/solc@version") version: string;
+
   @Sync("editor/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
@@ -126,7 +129,7 @@ export default class Compiler extends Vue {
   }
 
   @Watch("solc.version")
-  async onSolcVersionChange(version = this.solc.version) {
+  async onSolcVersionChange(version = this.version) {
     this.solc = { ...this.solc, ...{ loading: true } };
 
     const compiler = await SolcmManager.loadSolc(version);
