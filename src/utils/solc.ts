@@ -32,7 +32,7 @@ export class SolcmManager {
         return _content;
       }
       if (/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/.test(filePath)) {
-        filePath = filePath.replace(/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/, "https://github.com/OpenZeppelin/openzeppelin-contracts/");
+        filePath = filePath.replace(/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/, "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/release-v2.3.0/");
       }
       const data = await this.resolveEngine.require(filePath);
 
