@@ -76,7 +76,6 @@ export default class Compiler extends Vue {
         );
         this.editor.session.setAnnotations(errs);
         this.solc.compileLoading = false;
-        return;
       }
 
       const result = {};

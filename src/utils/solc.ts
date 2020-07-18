@@ -1,7 +1,7 @@
 import solcjsCore from "solcjs-core-fix";
 import solcVersion from "solc-version";
 import { resolverEngine } from "solc-resolver";
-import resolveGithub from "resolve-github";
+import resolveGithub from "../plugins/resolve-github";
 import resolveHttp from "resolve-http";
 import store from "@/store";
 import path from "path";
@@ -32,7 +32,7 @@ export class SolcmManager {
         return _content;
       }
       if (/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/.test(filePath)) {
-        filePath = filePath.replace(/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/, "https://github.com/OpenZeppelin/zeppelin-solidity/");
+        filePath = filePath.replace(/(openzeppelin\/|@openzeppelin\/|openzeppelin-solidity\/)/, "https://github.com/OpenZeppelin/openzeppelin-contracts/");
       }
       const data = await this.resolveEngine.require(filePath);
 
