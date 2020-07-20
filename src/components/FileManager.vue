@@ -265,7 +265,7 @@ export default class FileManager extends Vue {
     await this.clearLocalhostHostFile();
     const files = await sf.dir();
     if (files) {
-      const fileList = Object.keys(files).filter((i) => !i.includes(".git"));
+      const fileList = Object.keys(files).filter((i) => !/.git|node_modules/.test(i));
       for (let path of fileList) {
         const data = await sf.get({ path });
         await this.writeFile({ path: `${this.curDir}/localhost/${path}`, content: data.content, ensure: true });
