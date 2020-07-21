@@ -267,7 +267,7 @@ export default class Deployer extends Vue {
   async interactContract({ func, contract, fromDetail }) {
     try {
       const { privateKey = "", address: callerAddress } = this.account;
-      const { address: contractAddress, abiRaw, provider } = contract;
+      const { address: contractAddress, abiRaw, provider = {} } = contract;
       let { gasLimit, gasPrice } = this.form;
       gasLimit = Number(gasLimit);
       const { value } = this;
