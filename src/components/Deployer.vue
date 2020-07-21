@@ -177,6 +177,7 @@ export default class Deployer extends Vue {
       const { bytecode, name, abiRaw, abi } = this.currentContract;
       const { constructorInput } = this.deployForm;
       let { gasLimit, gasPrice } = this.form;
+      gasLimit = Number(gasLimit);
       const { value } = this;
       const senderPrivateKey = new Buffer(privateKey, "hex");
       const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
@@ -268,6 +269,7 @@ export default class Deployer extends Vue {
       const { privateKey = "", address: callerAddress } = this.account;
       const { address: contractAddress, abiRaw, provider } = contract;
       let { gasLimit, gasPrice } = this.form;
+      gasLimit = Number(gasLimit);
       const { value } = this;
 
       const { datas, inputTypes, outputTypes, method, stateMutability } = this.getFuncDatas({ func, fromDetail });
