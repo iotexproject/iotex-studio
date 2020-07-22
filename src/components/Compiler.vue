@@ -10,7 +10,7 @@
       .contract.mt-4(v-if="currentContractName")
         el-form-item(label="Contract")
           el-select(v-model="currentContractName")
-            el-option(v-for="item in solc.compileResult" :key="item.name" :label="item.name" :value="item.name")
+            el-option(v-for="item in compileResult" :key="item.name" :label="item.name" :value="item.name")
         div.flex.justify-end
           el-button(icon="el-icon-document" type="text" @click="copyAbi" :disabled="!$_.get(currentContract, 'abi')") ABI
           el-button(icon="el-icon-document" type="text" @click="copyBytecode" :disabled="!$_.get(currentContract, 'evm.bytecode.object')") Bytecode
@@ -32,20 +32,22 @@ import { StorageStore } from "../store/storage";
 
 @Component
 export default class Compiler extends Vue {
-  @Sync("editor/solc") solc: EditorStore["solc"];
-  @Sync("storage/solc@version") version: string;
+  @Sync("storage/curProject@solc.version") version: string;
 
-  @Sync("editor/ace@content") content: string;
+  @Sync("storage/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
-  currentContractName: string = null;
+  @Sync("editor/solc") solc: EditorStore["solc"];
+  @Sync("editor/solc@currentContractName") currentContractName: string;
+  @Sync("editor/solc@compileLoading") compileLoading: boolean;
+  @Sync("editor/solc@compileResult") compileResult: EditorStore["solc"]["compileResult"];
 
   async compile() {
     try {
       if (!this.solc.compiler) return;
-      this.solc = { ...this.solc, ...{ compileLoading: true } };
+      this.compileLoading = true;
       const { path: filePath, content, name: fileName } = this.curFile;
 
       this.editor.session.clearAnnotations();
@@ -75,7 +77,7 @@ export default class Compiler extends Vue {
           })
         );
         this.editor.session.setAnnotations(errs);
-        this.solc.compileLoading = false;
+        this.compileLoading = false;
       }
 
       const result = {};
@@ -88,11 +90,12 @@ export default class Compiler extends Vue {
         });
       });
 
-      this.solc = { ...this.solc, ...{ compileResult: { ...this.solc.compileResult, ...result }, compileLoading: false } };
+      this.compileResult = { ...this.compileResult, ...result };
+      this.compileLoading = false;
       this.currentContractName = Object.keys(result)[0];
       eventBus.emit("solc.compiled", result);
     } catch (error) {
-      this.solc.compileLoading = false;
+      this.compileLoading = false;
       throw error;
     }
   }
@@ -124,7 +127,7 @@ export default class Compiler extends Vue {
   }
 
   get currentContract() {
-    return this.solc.compileResult[this.currentContractName];
+    return this.compileResult[this.currentContractName];
   }
 
   @Watch("version")

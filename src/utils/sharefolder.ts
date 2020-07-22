@@ -24,29 +24,26 @@ export class ShareFolder {
       eventBus.emit("sharefolder.ws.closed");
     });
     this.ws.onError.addListener((e) => {
-      console.error({ error: e, message: e.message });
+      console.error(e);
       eventBus.emit("sharefolder.ws.error", e);
     });
-    this.ws.onMessage.addListener((e) => {
-      // console.log(e);
-    });
+    // this.ws.onMessage.addListener((e) => {
+    //   // console.log(e);
+    // });
     await this.ws.open();
     await this.ws.sendRequest({
       action: "request",
       key: "handshake",
       payload: ["iotex-studio"],
     });
+
     return this;
   }
 
   async ensureSocket() {
-    if (this.ws?.isOpened) return this.ws;
-    try {
-      await this.start();
-    } catch (error) {
-      app.eventBus.emit("term.error", { text: error.message });
-      return this.ws;
-    }
+    if (this.ws?.isOpened || this.ws?.isOpening) return this.ws;
+    await this.start();
+
     return this.ws;
   }
 

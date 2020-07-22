@@ -1,28 +1,46 @@
 import { make } from "vuex-pathify";
 import { FS } from "../utils/fs";
+import { CompiledContract } from "./type";
 
 const state: {
-  solc: {
-    version: string;
+  curProject: {
+    solc: {
+      version: string;
+    };
+    fileManager: {
+      curDir: string;
+      curFilePath: string;
+      curLinkStatus: "init" | "connecting" | "failed" | "connected";
+    };
+    toolbar: {
+      tabs: {
+        [key: string]: Partial<FS["file"]>;
+      };
+    };
   };
+  ace: {
+    content: string;
+    theme: string;
+    lang: string;
+    options: any;
+  };
+
   split: {
     size: {
       main: number[];
       editor: number[];
     };
   };
-  fileManager: {
-    curFilePath: string;
-    curLinkStatus: "init" | "connecting" | "failed" | "connected";
-  };
-  toolbar: {
-    tabs: {
-      [key: string]: Partial<FS["file"]>;
-    };
-  };
 } = {
-  solc: {
-    version: "v0.5.5-stable-2019.03.08",
+  ace: {
+    content: "",
+    theme: "tomorrow_night_eighties",
+    lang: "solidity",
+    options: {
+      enableBasicAutocompletion: true,
+      enableLiveAutocompletion: true,
+      // enableSnippets: true
+    },
   },
   split: {
     size: {
@@ -30,12 +48,18 @@ const state: {
       editor: [75, 25],
     },
   },
-  fileManager: {
-    curFilePath: null,
-    curLinkStatus: "init",
-  },
-  toolbar: {
-    tabs: {},
+  curProject: {
+    solc: {
+      version: "v0.5.5-stable-2019.03.08",
+    },
+    fileManager: {
+      curDir: "/project/default",
+      curFilePath: null,
+      curLinkStatus: "init",
+    },
+    toolbar: {
+      tabs: {},
+    },
   },
 };
 

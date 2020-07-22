@@ -5,7 +5,7 @@
         .item(v-for="(item,index) in stdout" :key="index")
           div(@click="item.expanded = !item.expanded") 
             el-alert(v-if="item.component='alert'" :title="item.text" :type="item.type" show-icon :description="item.description" :closable="false")
-            span(v-else) {{item.text}}
+            span(v-else) 
           .flex.flex-col.detail.px-6.text-xs(v-if="item.data && item.expanded")
             div.flex.justify-between(v-for="(value, key) in item.data" :key="key")
               div {{key}}:
@@ -38,6 +38,11 @@ export default class Term extends Vue {
   }
 
   runCommand() {
+    this.stdin.push[this.input];
+
+    if ((this.input = "clear")) {
+      this.stdout = [];
+    }
     this.input = null;
   }
 

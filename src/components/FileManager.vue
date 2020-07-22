@@ -61,13 +61,13 @@ BrowserFS.configure(
 @Component
 export default class FileManager extends Vue {
   WriteFileType: Partial<{ path: string; content: string; ensure?: boolean; force?: boolean }>;
-  @Sync("editor/ace@content") content: string;
-  @Sync("editor/fileManager@curDir") curDir: string;
+  @Sync("storage/ace@content") content: string;
+  @Sync("storage/curProject@fileManager.curDir") curDir: string;
   @Sync("editor/fileManager@defaultFiles") defaultFiles: EditorStore["fileManager"]["defaultFiles"];
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Sync("editor/fileManager@filesLoaded") filesLoaded: EditorStore["fileManager"]["filesLoaded"];
-  @Sync("storage/fileManager@curFilePath") curFilePath: string;
-  @Sync("storage/fileManager@curLinkStatus") curLinkStatus: StorageStore["fileManager"]["curLinkStatus"];
+  @Sync("storage/curProject@fileManager.curFilePath") curFilePath: string;
+  @Sync("storage/curProject@fileManager.curLinkStatus") curLinkStatus: StorageStore["curProject"]["fileManager"]["curLinkStatus"];
   @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 
   name = "filemanager";
@@ -242,7 +242,10 @@ export default class FileManager extends Vue {
 
   async clearLocalhostHostFile() {
     const localhostDir = `${this.curDir}/localhost`;
-    if (await this.fileManager.ensureDir(localhostDir)) {
+
+    //@ts-ignore
+    const [exists] = await app.helper.runAsync(fs.promises.exists(localhostDir));
+    if (exists) {
       await this.fileManager.rm(localhostDir);
     }
   }
@@ -263,7 +266,17 @@ export default class FileManager extends Vue {
 
   async loadLocalhostFile() {
     await this.clearLocalhostHostFile();
-    const files = await sf.dir();
+
+    const [err, files] = await app.helper.runAsync(sf.dir());
+    if (err) {
+      app.eventBus.emit("term.info", {
+        text:
+          "This feature is require remixd, please download and install remixd. If you have installed, you cloud run this command to link share-folder to ide, here it is: remixd -s ./ --remix-ide https://ide.iotex.io ",
+        data: {
+          command: "remixd -s ./ --remix-ide https://ide.iotex.io",
+        },
+      });
+    }
     if (files) {
       const fileList = Object.keys(files).filter((i) => !/.git|node_modules/.test(i));
       for (let path of fileList) {

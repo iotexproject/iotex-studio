@@ -24,7 +24,7 @@
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") At Address
           el-input(placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
-          el-select.mb-1(v-model="currentDeployProvider" value-key="name")
+          el-select.mb-1(v-if="currentEnvironment == 'deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
             el-option(v-for="item in providers" :key="item.name" :label="item.name" :value="item") {{item.name}}
       .deplyed-contracts.mt-6.text-sm
         .flex.mb-2.text-xs.font-bold Deployed Contracts

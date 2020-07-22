@@ -16,11 +16,11 @@ import { EditorStore } from "../store/editor";
 export default class Editor extends Vue {
   @Sync("editor/solc") solc: EditorStore["solc"];
   @Sync("editor/ace@editor") editor: ace.Editor;
-  @Sync("editor/ace@theme") theme: string;
-  @Sync("editor/ace@lang") lang: string;
-  @Sync("editor/ace@options") options: any;
-  @Sync("editor/ace@content") content: string;
-  @Sync("storage/fileManager@curFilePath") curFilePath: string;
+  @Sync("storage/ace@theme") theme: string;
+  @Sync("storage/ace@lang") lang: string;
+  @Sync("storage/ace@options") options: any;
+  @Sync("storage/ace@content") content: string;
+  @Sync("storage/curProject@fileManager.curFilePath") curFilePath: string;
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Get("editor/curFile") curFile: EditorStore["fileManager"]["file"];
 

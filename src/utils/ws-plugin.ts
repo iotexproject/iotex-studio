@@ -43,10 +43,10 @@ export class WsSignerPlugin implements SignerPlugin {
   private async init() {
     this.ws = new WebSocket(this.provider, this.options);
     this.ws.onOpen.addListener(() => {
-      eventBus.emit("term.message", { text: "[antenna-ws] connected" });
+      eventBus.emit("term.message", { text: "[iopay-desktop] connected" });
     });
     this.ws.onClose.addListener = () => {
-      eventBus.emit("term.warning", { text: "[antenna-ws] disconnected" });
+      eventBus.emit("term.warning", { text: "[iopay-desktop] disconnected" });
     };
     await this.ws.open();
     return this;

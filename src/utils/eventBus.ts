@@ -4,6 +4,7 @@ import ace from "brace";
 import { StdoutType } from "../store/type";
 import { FS } from "./fs";
 import { EditorStore } from "../store/editor";
+import { StorageStore } from "../store/storage";
 
 interface MessageEvents {
   "editor.save": () => void;

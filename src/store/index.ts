@@ -10,7 +10,7 @@ import VuexPersist from "vuex-persist";
 import { StorageStore } from "./storage";
 import { EditorStore } from "./editor";
 
-const vuexPersist = new VuexPersist({
+const storagePersist = new VuexPersist({
   key: "iotex-studio",
   storage: window.localStorage,
   modules: ["storage"],
@@ -25,7 +25,7 @@ export default new Vuex.Store<{
   editor: EditorStore;
   storage: StorageStore;
 }>({
-  plugins: [pathify.plugin, vuexPersist.plugin],
+  plugins: [pathify.plugin, storagePersist.plugin],
   //@ts-ignore
   state,
   mutations,

@@ -7,6 +7,7 @@ const { ProvidePlugin } = require("webpack");
 /** @type {Options} */
 const options = {
   configureWebpack: {
+    devtool: "source-map",
     resolve: {
       alias: {
         fs: "browserfs/dist/shims/fs.js",
@@ -14,19 +15,19 @@ const options = {
         path: "browserfs/dist/shims/path.js",
         processGlobal: "browserfs/dist/shims/process.js",
         bufferGlobal: "browserfs/dist/shims/bufferGlobal.js",
-        bfsGlobal: require.resolve("browserfs")
-      }
+        bfsGlobal: require.resolve("browserfs"),
+      },
     },
     module: {
-      noParse: [/browserfs\.js/]
+      noParse: [/browserfs\.js/],
     },
     plugins: [new ProvidePlugin({ BrowserFS: "bfsGlobal", process: "processGlobal", Buffer: "bufferGlobal" })],
     node: {
       process: false,
       Buffer: false,
-      module: false
-    }
-  }
+      module: false,
+    },
+  },
 };
 
 module.exports = options;

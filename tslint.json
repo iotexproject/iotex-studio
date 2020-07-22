@@ -5,10 +5,7 @@
     "exclude": ["node_modules/**"]
   },
   "rules": {
-    "indent": [true, "spaces", 2],
-    "no-floating-promises": false,
-    "promise-function-async": true,
-    "await-promise": true
+    "indent": [true, "spaces", 2]
   },
   "jsRules": {
     "no-empty": true

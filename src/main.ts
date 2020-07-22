@@ -16,8 +16,15 @@ import contentmenu from "v-contextmenu";
 Vue.use(contentmenu);
 
 import VueSplit from "vue-split-panel";
-import { ShareFolder } from "./utils/sharefolder";
+import { eventBus } from "./utils/eventBus";
 Vue.use(VueSplit);
+
+// Vue.config.errorHandler = (err, vm, info) => {
+//   console.log({ err, vm, info });
+//   // eventBus.emit("term.error", {
+//   //   text: "err"
+//   // });
+// };
 
 Vue.prototype.$_ = _;
 
@@ -25,5 +32,5 @@ Vue.config.productionTip = false;
 new Vue({
   router,
   store,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount("#app");
