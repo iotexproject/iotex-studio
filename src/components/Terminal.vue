@@ -68,7 +68,7 @@ export default class Term extends Vue {
     this.writeLn({
       component: "alert",
       type: "info",
-      text: `  Welcome to Iotex Studio v${packageData.version}`,
+      text: `  Welcome to IoTeX Studio v${packageData.version}`,
     });
   }
 }

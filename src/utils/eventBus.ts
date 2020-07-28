@@ -11,7 +11,8 @@ interface MessageEvents {
   "editor.init": (editor: ace.Editor) => void;
   "editor.content.update": (content: string) => void;
   "solc.compile": () => void;
-  "solc.compiled": (result: EditorStore["solc"]["compileResult"]) => void;
+  "solc.compiled.finished": (result: EditorStore["solc"]["compileResult"]) => void;
+  "solc.compiled.failed": (err: Error) => void;
   "term.message": (message: StdoutType) => void;
   "term.error": (message: StdoutType) => void;
   "term.success": (message: StdoutType) => void;

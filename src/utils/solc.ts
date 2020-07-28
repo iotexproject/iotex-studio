@@ -39,19 +39,20 @@ export class SolcmManager {
       return data;
     });
     const res = this.compiler.compile(content, 1, readCallback);
+    console.log({ res });
     const {
-      contracts: { MyContract: MyContract_contract, ...otherContracts },
+      contracts: { MyContract: MyContract_contract, ...otherContracts } = { MyContract: {} },
       sources: { MyContract: MyContract_source, ...otherSources },
     } = res;
 
     return {
       errors: res.errors,
       contracts: {
-        [name]: res.contracts.MyContract,
+        [name]: MyContract_contract,
         ...otherContracts,
       },
       sources: {
-        [name]: res.sources.MyContract,
+        [name]: MyContract_source,
         ...otherSources,
       },
     };

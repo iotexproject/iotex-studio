@@ -422,7 +422,7 @@ export default class Deployer extends Vue {
 
   created() {
     this.initJSVM();
-    eventBus.on("solc.compiled", (result) => {
+    eventBus.on("solc.compiled.finished", (result) => {
       _.each(result, (v, k) => {
         const { name } = v;
         const abi = _.groupBy(v.abi, "type");

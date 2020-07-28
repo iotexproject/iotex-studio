@@ -29,6 +29,7 @@
     "ethereumjs-vm": "^4.1.1",
     "ethers": "^5.0.2",
     "express": "^4.17.1",
+    "express-http-to-https": "^1.1.4",
     "fs.promises": "^0.1.2",
     "helpful-decorators": "^2.0.5",
     "iotex-antenna": "^0.30.0",

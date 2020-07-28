@@ -45,6 +45,7 @@ export default class Toolbar extends Vue {
         this.tabs = { ...this.tabs, [path]: { path, name } };
       })
       .on("fs.loadFiles", (files) => {
+        if (!this.tabs) return;
         Object.keys(this.tabs).forEach((i) => {
           if (!files[i]) {
             this.$delete(this.tabs, i);

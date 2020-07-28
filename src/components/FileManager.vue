@@ -115,7 +115,7 @@ export default class FileManager extends Vue {
       .on("toolbar.tab.select", (file) => {
         this.curFilePath = file.path;
       })
-      .on("solc.compiled", () => {
+      .on("solc.compiled.finished", () => {
         this.saveCurrentFile();
       })
       .on("editor.content.update", async (content) => {

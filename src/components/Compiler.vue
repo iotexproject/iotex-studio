@@ -93,10 +93,11 @@ export default class Compiler extends Vue {
       this.compileResult = { ...this.compileResult, ...result };
       this.compileLoading = false;
       this.currentContractName = Object.keys(result)[0];
-      eventBus.emit("solc.compiled", result);
+      console.log(123);
+      eventBus.emit("solc.compiled.finished", result);
     } catch (error) {
       this.compileLoading = false;
-      throw error;
+      console.log(error);
     }
   }
 
@@ -144,6 +145,12 @@ export default class Compiler extends Vue {
     eventBus
       .on("solc.compile", () => {
         this.compile();
+      })
+      .on("solc.compiled.finished", () => {
+        eventBus.emit("term.info", { text: "compile finished." });
+      })
+      .on("solc.compiled.failed", () => {
+        eventBus.emit("term.error", { text: "compile failed." });
       })
       .on("editor.save", () => {
         this.compile();
