@@ -6,7 +6,7 @@
         el-select(v-model="version")
           el-option(v-for="item in solc.versions.releases" :key="item" :label="item" :value="item")
       div.mt-2.w-full
-        el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile
+        el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile Contract
       .contract.mt-4(v-if="currentContractName")
         el-form-item(label="Contract")
           el-select(v-model="currentContractName")
@@ -93,7 +93,6 @@ export default class Compiler extends Vue {
       this.compileResult = { ...this.compileResult, ...result };
       this.compileLoading = false;
       this.currentContractName = Object.keys(result)[0];
-      console.log(123);
       eventBus.emit("solc.compiled.finished", result);
     } catch (error) {
       this.compileLoading = false;

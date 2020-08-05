@@ -16,7 +16,7 @@ import { EditorStore } from "../store/editor";
 
 @Component
 export default class Toolbar extends Vue {
-  @Sync("storage/fileManager@curFilePath") curFilePath: string;
+  @Sync("storage/curProject@fileManager.curFilePath") curFilePath: string;
   @Sync("editor/fileManager@files") files: EditorStore["fileManager"]["files"];
   @Sync("storage/curProject@toolbar.tabs.data") tabs: StorageStore["curProject"]["toolbar"]["tabs"];
 

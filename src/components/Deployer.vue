@@ -1,6 +1,7 @@
 <template lang="pug">
   .deployer.flex.flex-col
     .flex.mb-2.text-sm.font-bold DEPLOY & RUN TRANSACTIONS
+     // Account & Env & Gas
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Environment")
         el-select.mb-1.w-full(v-model="currentEnvironment" )
@@ -15,17 +16,35 @@
           el-input(v-model="form.value" size="small")
           el-select(v-model="form.valueType" size="small")
             el-option(v-for="(item, index) in valueTypes" :key="index" :label="item" :value="item")
+      // Contract argument
       .deploy-contract.mt-4
+        .flex.mb-2.text-xs.font-bold Compiled contracts
         el-select.w-full(v-model="currentContractName")
           el-option(v-for="(item, index) in contracts" :key="index" :label="item.name" :value="item.name") {{item.name}}
         .flex.mt-4(v-if="currentContract")
-          el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContract" type="primary") Deploy
-          el-input(:placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))" v-if="$_.get(currentContract, 'abi.constructor.0')"  v-model="deployForm.constructorInput")
+          .func-full.w-full.func-detail.py-1.px-1(v-if="contractConsturcter.showConstructorDetail")
+            .func-name.flex.justify-between.w-full.items-center(@click="contractConsturcter.showConstructorDetail=false")
+              span Deploy
+              el-icon.el-icon-arrow-up.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
+            .func-input-list.flex.items-center.my-2(v-for="(input,index) in $_.get(currentContract, 'abi.constructor.0.inputs')" :key="index")
+              span.text-right(class="w-4/12") {{input.name}}: 
+              el-input.ml-2(v-model="input.value" size="mini" class="w-4/12" :placeholder="input.type")
+            .func-actions.flex.justify-end.items-center
+              span.mr-2
+                el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
+              el-button(size="small" type="primary" @click="deployContract({fromDetail: true})")
+                span transact
+          .flex.flex-1(v-if="!contractConsturcter.showConstructorDetail && currentContract.abi.constructor[0]")
+            el-button(style="width: 160px;min-width: 160px;height: 30px" size="small" @click="deployContract" type="primary") Deploy Contract
+            el-input.flex-1( size="mini" :placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))"  v-model="currentContract.abi.constructor[0].datas")
+            span.func-bar-actions(@click="contractConsturcter.showConstructorDetail =true")
+              el-icon.el-icon-arrow-down.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
         .flex.mt-4(v-if="currentContract")
-          el-button(style="width: 100px;min-width: 100px;height: 40px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") At Address
-          el-input(placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
+          el-button(style="width: 160px;min-width: 160px;height: 30px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") Load deployed contract
+          el-input(size="mini" placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
           el-select.mb-1(v-if="currentEnvironment == 'deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
             el-option(v-for="item in providers" :key="item.name" :label="item.name" :value="item") {{item.name}}
+      //Deployed contract list
       .deplyed-contracts.mt-6.text-sm
         .flex.mb-2.text-xs.font-bold Deployed Contracts
         .contract-list.p-2.rounded.border(v-for="(contract, index) in deployedContracts" :key="index")
@@ -121,12 +140,17 @@ export default class Deployer extends Vue {
   providers = AntennaUtils.providers;
   currentDeployProvider = AntennaUtils.providers.testnet;
 
+  contractConsturcter = {
+    showConstructorDetail: false,
+  };
+
   form = {
     gasLimit: 3000000,
     gasPrice: 1,
     value: 0,
     valueType: "Rau",
   };
+
   valueTypes = ["Rau", "KRau", "MRau", "GRua", "Qev", "Jing", "Iotx"];
   accountIndex = 0;
 
@@ -171,11 +195,12 @@ export default class Deployer extends Vue {
     }
   }
 
-  async deployContract() {
+  async deployContract({ fromDetail } = { fromDetail: false }) {
     try {
       const { privateKey = "", address: callerAddress } = this.account;
       const { bytecode, name, abiRaw, abi } = this.currentContract;
-      const { constructorInput } = this.deployForm;
+      const { datas, inputTypes, outputTypes, method, stateMutability } = this.getFuncDatas({ func: this.currentContract.abi.constructor[0], fromDetail });
+
       let { gasLimit, gasPrice } = this.form;
       gasLimit = Number(gasLimit);
       const { value } = this;
@@ -183,7 +208,6 @@ export default class Deployer extends Vue {
       const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
 
       const types = inputs.map((i) => i.type);
-      const datas = constructorInput ? constructorInput.split(/,(?![^(]*\)) /) : [];
       types.forEach((o, i) => {
         if (!datas[i]) {
           datas[i] = defaultTypeValue[o];
@@ -247,7 +271,7 @@ export default class Deployer extends Vue {
   }
 
   getFuncDatas({ func, fromDetail = false }: { func: AbiFunc; fromDetail?: boolean }) {
-    const { inputs, outputs, name: method, stateMutability } = func;
+    const { inputs = [], outputs = [], name: method, stateMutability } = func;
     const inputTypes = inputs.map((i) => i.type);
     const outputTypes = outputs.map((i) => i.type);
     let datas;

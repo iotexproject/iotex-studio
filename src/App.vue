@@ -35,6 +35,8 @@ div
 body
   .el-button--text
     color grey
+    &:hover
+      color color-primary
   .el-form-item
     margin-bottom 0
   .el-form-item__content
@@ -57,11 +59,13 @@ body
     background-color lighten(color-dark, 10)
   .el-button--primary, .el-button--default, .el-button.is-disabled
     &:hover, &:focus, color color-dark-text
-      background lighten(color-dark, 10%)
-      border-color lighten(color-dark-input-border, 10%)
+      background saturation(color-primary, 60%)
     color color-dark-text
-    background darken(color-dark, 20%)
-    border-color color-dark-input-border
+    background saturation(color-primary, 30%)
+
+    // border-color darken(color-primary, 30%)
+    border none
+    font-weight bold
   .el-input__inner
     &:hover, &:focus
       color color-dark-text
