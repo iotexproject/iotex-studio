@@ -42,7 +42,7 @@
         .flex.mt-4(v-if="currentContract")
           el-button(style="width: 160px;min-width: 160px;height: 30px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") Load deployed contract
           el-input(size="mini" placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
-          el-select.mb-1(v-if="currentEnvironment == 'deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
+          el-select.mb-1(v-if="currentEnvironment == 'Deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
             el-option(v-for="item in providers" :key="item.name" :label="item.name" :value="item") {{item.name}}
       //Deployed contract list
       .deplyed-contracts.mt-6.text-sm
@@ -157,8 +157,8 @@ export default class Deployer extends Vue {
   contracts: any = {};
   currentContractName: string = null;
 
-  environment: "JavaScript VM" | "deploy via ioPay(Desktop)";
-  environments: Deployer["environment"][] = ["JavaScript VM", "deploy via ioPay(Desktop)"];
+  environment: "JavaScript VM" | "Deploy via ioPay(Desktop)";
+  environments: Deployer["environment"][] = ["JavaScript VM", "Deploy via ioPay(Desktop)"];
   currentEnvironment: Deployer["environment"] = "JavaScript VM";
 
   async copyText(text) {
@@ -174,7 +174,7 @@ export default class Deployer extends Vue {
         case "JavaScript VM":
           data = "0x" + jsvm.getData({ types: inputTypes, datas, method });
           break;
-        case "deploy via ioPay(Desktop)":
+        case "Deploy via ioPay(Desktop)":
           data = jsvm.getData({ types: inputTypes, datas, method });
           break;
       }
@@ -221,7 +221,7 @@ export default class Deployer extends Vue {
 
           address = await jsvm.deplyContract({ senderPrivateKey, bytecode: new Buffer(bytecode, "hex"), types, datas, gasLimit, value });
           break;
-        case "deploy via ioPay(Desktop)":
+        case "Deploy via ioPay(Desktop)":
           console.debug({ from: callerAddress, amount: String(value), data: bytecode, abi: JSON.stringify(abiRaw), gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
 
           const res = (await antenna.iotx.deployContract(
@@ -341,7 +341,7 @@ export default class Deployer extends Vue {
           }
           this.reloadAccounts();
           break;
-        case "deploy via ioPay(Desktop)":
+        case "Deploy via ioPay(Desktop)":
           console.log({ abi: JSON.stringify(abiRaw), from: callerAddress, method, contractAddress, gasLimit: String(gasLimit), gasPrice: toRau(String(gasPrice), "Qev"), datas });
           if (provider.url) {
             antenna.setProvider(provider.url);
@@ -400,11 +400,15 @@ export default class Deployer extends Vue {
 
   async initAntenna() {
     const [err, accounts] = await app.helper.runAsync(wsSigner.getAccounts());
-    if (err) {
+
+    if (err || !accounts.length) {
+      setTimeout(() => {
+        this.initAntenna();
+      }, 5000);
       return eventBus.emit("term.message", {
         component: "alert",
-        type: "error",
-        text: err.message,
+        type: "warning",
+        text: "Load account failed. Please make sure Iopay-desktop is opened and also has unlocked the wallet.",
       });
     }
 
@@ -438,7 +442,7 @@ export default class Deployer extends Vue {
     switch (this.currentEnvironment) {
       case "JavaScript VM":
         return this.initJSVM();
-      case "deploy via ioPay(Desktop)":
+      case "Deploy via ioPay(Desktop)":
         // eventBus.emit("term.info", )
         return this.initAntenna();
     }
