@@ -35,14 +35,14 @@
               el-button(size="small" type="primary" @click="deployContract({fromDetail: true})")
                 span transact
           .flex.flex-1(v-if="!contractConsturcter.showConstructorDetail && currentContract.abi.constructor[0]")
-            el-button(style="width: 160px;min-width: 160px;height: 30px" size="small" @click="deployContract" type="primary") Deploy Contract
-            el-input.flex-1( size="mini" :placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))"  v-model="currentContract.abi.constructor[0].datas")
+            el-button(style="width: 160px;min-width: 160px" size="mini" @click="deployContract" type="primary") Deploy Contract
+            el-input.flex-1( size="small" :placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))"  v-model="currentContract.abi.constructor[0].datas")
             span.func-bar-actions(@click="contractConsturcter.showConstructorDetail =true")
               el-icon.el-icon-arrow-down.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
         .flex.mt-4(v-if="currentContract")
-          el-button(style="width: 160px;min-width: 160px;height: 30px" size="small" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") Load deployed contract
-          el-input(size="mini" placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
-          el-select.mb-1(v-if="currentEnvironment == 'Deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
+          el-button(style="width: 160px;min-width: 160px" size="mini" @click="deployContractFromAddress" :disabled="!deployForm.atContractInput" type="primary") Load deployed contract
+          el-input(size="small" placeholder="Load contract from Address"  v-model="deployForm.atContractInput")
+          el-select.mb-1(size="small" v-if="currentEnvironment == 'Deploy via ioPay(Desktop)'" v-model="currentDeployProvider" value-key="name")
             el-option(v-for="item in providers" :key="item.name" :label="item.name" :value="item") {{item.name}}
       //Deployed contract list
       .deplyed-contracts.mt-6.text-sm
