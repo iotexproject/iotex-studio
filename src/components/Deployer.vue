@@ -402,9 +402,11 @@ export default class Deployer extends Vue {
     const [err, accounts] = await app.helper.runAsync(wsSigner.getAccounts());
 
     if (err || !accounts.length) {
-      setTimeout(() => {
-        this.initAntenna();
-      }, 5000);
+      if (this.currentEnvironment == "Deploy via ioPay(Desktop)") {
+        setTimeout(() => {
+          this.initAntenna();
+        }, 5000);
+      }
       return eventBus.emit("term.message", {
         component: "alert",
         type: "warning",
