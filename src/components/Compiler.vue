@@ -29,6 +29,7 @@ import * as path from "path";
 import { EditorStore } from "../store/editor";
 import { app } from "../utils";
 import { StorageStore } from "../store/storage";
+import axios from "axios";
 
 @Component
 export default class Compiler extends Vue {
@@ -101,7 +102,8 @@ export default class Compiler extends Vue {
   }
 
   async initSolc() {
-    const [err, versions] = await app.helper.runAsync(solcjs.versions());
+    const [err, versionRes] = await app.helper.runAsync(axios.get("https://solc-bin.ethereum.org/bin/list.json"));
+    const versions = versionRes.data;
     if (err) {
       return eventBus.emit("term.error", {
         text: `load solc compiler versions failed: ${err}`,

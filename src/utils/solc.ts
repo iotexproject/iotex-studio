@@ -5,14 +5,18 @@ import resolveGithub from "../plugins/resolve-github";
 import resolveHttp from "resolve-http";
 import store from "@/store";
 import path from "path";
+import axios from "axios";
 
 const solcWrapper = solcjsCore.solcWrapper.wrapper;
 export class SolcmManager {
   static resolveEngine = new resolverEngine().addResolver(resolveGithub).addResolver(resolveHttp);
   static compiler: any;
   static async loadSolc(version) {
-    const url = await solcVersion.version2url(version);
-    let compilersource = await solcjsCore.getCompilersource(url);
+    // const url = await solcVersion.version2url(version);
+    const url = `http://ide.iotex.io/wasm/${version}`;
+    // let compilersource = await solcjsCore.getCompilersource(url);
+    let compilersource = await axios.get(url, {});
+
     const solcjson = solcjsCore.loadModule(compilersource);
     const compiler = (this.compiler = solcWrapper(solcjson));
     return compiler;
