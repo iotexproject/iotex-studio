@@ -7,9 +7,15 @@ import cors from "cors";
 
 const app = express();
 
-app.get("/wasm/:version", async (req, res, next) => {
+app
+  .use(cors())
+  .use(redirectToHTTPS([/localhost:(\d{4})/], [/\/insecure/], 301))
+  .use(compression())
+  .use(serveStatic(__dirname + "/dist", { maxAge: 86400 * 1000 }));
+
+app.get("/bin/:version", async (req, res, next) => {
   const version = req.params["version"];
-  axios.get(`https://solc-bin.ethereum.org/wasm/${version}`, { responseType: "stream" }).then((response) => {
+  axios.get(`https://solc-bin.ethereum.org/bin/${version}`, { responseType: "stream" }).then((response) => {
     res.set({
       ...response.headers,
       "Access-Control-Allow-Origin": "*",
@@ -19,12 +25,6 @@ app.get("/wasm/:version", async (req, res, next) => {
     response.data.pipe(res);
   });
 });
-
-app
-  .use(cors())
-  .use(redirectToHTTPS([/localhost:(\d{4})/], [/\/insecure/], 301))
-  .use(compression())
-  .use(serveStatic(__dirname + "/dist", { maxAge: 86400 * 1000 }));
 
 var port = process.env.PORT || 5000;
 app.listen(port);
