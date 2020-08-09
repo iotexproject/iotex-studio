@@ -3,6 +3,8 @@ import serveStatic from "serve-static";
 import compression from "shrink-ray-current";
 import { redirectToHTTPS } from "express-http-to-https";
 import axios from "axios";
+import cors from "cors";
+
 const app = express();
 
 app.get("/wasm/:version", async (req, res, next) => {
@@ -17,6 +19,7 @@ app.get("/wasm/:version", async (req, res, next) => {
 });
 
 app
+  .use(cors())
   .use(redirectToHTTPS([/localhost:(\d{4})/], [/\/insecure/], 301))
   .use(compression())
   .use(serveStatic(__dirname + "/dist", { maxAge: 86400 * 1000 }));

@@ -14,8 +14,8 @@ export class SolcmManager {
   static async loadSolc(version) {
     // const url = await solcVersion.version2url(version);
     const url = `https://ide.iotex.io/wasm/${version}`;
-    // let compilersource = await solcjsCore.getCompilersource(url);
-    let compilersource = await axios.get(url, {});
+    let compilersource = await solcjsCore.getCompilersource(url);
+    // let compilersource = await axios.get(url);
 
     const solcjson = solcjsCore.loadModule(compilersource);
     const compiler = (this.compiler = solcWrapper(solcjson));
