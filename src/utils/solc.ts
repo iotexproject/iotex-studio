@@ -13,7 +13,8 @@ export class SolcmManager {
   static compiler: any;
   static async loadSolc(version) {
     // const url = await solcVersion.version2url(version);
-    const url = `https://ide.iotex.io/wasm/${version}`;
+    // const url = `https://ide.iotex.io/wasm/${version}`;
+    const url = `https://solc-bin.ethereum.org/bin/${version}`;
     let compilersource = await solcjsCore.getCompilersource(url);
     // let compilersource = await axios.get(url);
 
