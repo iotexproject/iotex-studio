@@ -12,6 +12,8 @@ app.get("/wasm/:version", async (req, res, next) => {
   axios.get(`https://solc-bin.ethereum.org/wasm/${version}`, { responseType: "stream" }).then((response) => {
     res.set({
       ...response.headers,
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "PUT,POST,GET,DELETE,OPTIONS",
       "Cache-Control": "public, max-age=31557600",
     });
     response.data.pipe(res);
