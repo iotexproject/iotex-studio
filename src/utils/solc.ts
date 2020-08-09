@@ -1,24 +1,45 @@
-import solcjsCore from "solcjs-core-fix";
-import solcVersion from "solc-version";
+// import solcjsCore from "solcjs-core-fix";
+// import solcVersion from "solc-version";
 import { resolverEngine } from "solc-resolver";
 import resolveGithub from "../plugins/resolve-github";
 import resolveHttp from "resolve-http";
 import store from "@/store";
 import path from "path";
+import { Compiler } from "remix-solidity";
+import { CompilerAbstract } from "./compiler-abstract";
 
-const solcWrapper = solcjsCore.solcWrapper.wrapper;
+// const solcWrapper = solcjsCore.solcWrapper.wrapper;
 export class SolcmManager {
   static resolveEngine = new resolverEngine().addResolver(resolveGithub).addResolver(resolveHttp);
-  static compiler: any;
+  static compiler = new Compiler(() => {});
   static async loadSolc(version) {
-    const url = await solcVersion.version2url(version);
-    let compilersource = await solcjsCore.getCompilersource(url);
-    const solcjson = solcjsCore.loadModule(compilersource);
-    const compiler = (this.compiler = solcWrapper(solcjson));
-    return compiler;
+    // const url = await solcVersion.version2url(version);
+    const url = `https://solc-bin.ethereum.org/wasm/${version}`;
+    // const url = `https://solc-bin.ethereum.org/wasm/soljson-v0.5.14+commit.01f1aaa4.js`;
+    //  let compilersource = await solcjsCore.getCompilersource(url);
+    this.compiler.loadVersion(false, url);
+    //  const solcjson = solcjsCore.loadModule(compilersource);
+    //  const compiler = (this.compiler = solcWrapper(solcjson));
+    return this.compiler;
   }
 
-  static async compile({ name, content }: { name: string; content: string }) {
+  static urlFromVersion(version) {
+    return `https://solc-bin.ethereum.org/wasm/${version}`;
+  }
+
+  static async compile({ name, content, version }: { name: string; content: string; version: string }) {
+    return new Promise((resolve, reject) => {
+      const compiler = new Compiler(() => {});
+      console.log("start compile");
+      compiler.set("language", "Solidity");
+      compiler.loadVersion(false, this.urlFromVersion(version));
+      compiler.event.register("compilationFinished", (success, compilationData, source) => {
+        console.log({ success, compilationData, source });
+        resolve(new CompilerAbstract(version, compilationData, source));
+      });
+      compiler.event.register("compilerLoaded", (_) => compiler.compile({ test: { content } }, "test.sol"));
+    });
+
     content = content.replace(/"..\//g, `"${path.dirname(path.dirname(name))}/`).replace(/".\//g, `"${path.dirname(name)}/`);
 
     let readCallback = await solcjsCore.getReadCallback(content, async (filePath: string) => {

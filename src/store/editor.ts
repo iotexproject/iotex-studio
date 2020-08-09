@@ -24,9 +24,9 @@ const state: {
     compileResult: Record<string, CompiledContract>;
     currentContractName: string;
     versions: {
-      all: string[];
-      nightly: string[];
-      releases: string[];
+      builds: { build: string; keccak256: string; longVersion: string; path: string; urls: string[] }[];
+      latestRelease: string;
+      releases: { [key: string]: string };
     };
   };
 } = {
@@ -49,9 +49,9 @@ const state: {
     currentContractName: "",
     compileResult: {},
     versions: {
-      all: [],
-      nightly: [],
-      releases: [],
+      builds: [],
+      latestRelease: "",
+      releases: {},
     },
   },
 };

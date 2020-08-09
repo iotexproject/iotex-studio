@@ -20,6 +20,20 @@ const options = {
     },
     module: {
       noParse: [/browserfs\.js/],
+
+      rules: [
+        {
+          test: /\.worker\.ts$/i,
+          use: [
+            {
+              loader: "comlink-loader",
+              options: {
+                singleton: true,
+              },
+            },
+          ],
+        },
+      ],
     },
     plugins: [new ProvidePlugin({ BrowserFS: "bfsGlobal", process: "processGlobal", Buffer: "bufferGlobal" })],
     node: {

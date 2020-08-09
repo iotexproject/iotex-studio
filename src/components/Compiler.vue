@@ -29,6 +29,8 @@ import * as path from "path";
 import { EditorStore } from "../store/editor";
 import { app } from "../utils";
 import { StorageStore } from "../store/storage";
+import axios from "axios";
+import { getFile } from "@/utils/utils.worker";
 
 @Component
 export default class Compiler extends Vue {
@@ -46,13 +48,13 @@ export default class Compiler extends Vue {
 
   async compile() {
     try {
-      if (!this.solc.compiler) return;
+      // if (!this.solc.compiler) return;
       this.compileLoading = true;
       const { path: filePath, content, name: fileName } = this.curFile;
 
       this.editor.session.clearAnnotations();
       console.log({ name: filePath, content });
-      let res = await SolcmManager.compile({ name: filePath, content });
+      let res = await SolcmManager.compile({ name: filePath, content, version: this.version });
       console.log({ res });
       if (res.errors) {
         const errs = res.errors.map((err) => {
@@ -101,7 +103,12 @@ export default class Compiler extends Vue {
   }
 
   async initSolc() {
-    const [err, versions] = await app.helper.runAsync(solcjs.versions());
+    // const res = await getFile({ url: "https://solc-bin.ethereum.org/wasm/soljson-v0.5.14+commit.01f1aaa4.js" });
+    // console.log({ res });
+    // return;
+    const [err, versionRes] = await app.helper.runAsync(axios.get("https://solc-bin.ethereum.org/wasm/list.json"));
+    const versions = versionRes.data;
+    console.log(versions);
     if (err) {
       return eventBus.emit("term.error", {
         text: `load solc compiler versions failed: ${err}`,
@@ -132,11 +139,10 @@ export default class Compiler extends Vue {
 
   @Watch("version")
   async onSolcVersionChange(version = this.version) {
-    this.solc = { ...this.solc, ...{ loading: true } };
-
-    const compiler = await SolcmManager.loadSolc(version);
+    // this.solc = { ...this.solc, ...{ loading: true } };
+    // const compiler = await SolcmManager.loadSolc(version);
     // const compiler = await solcjs(val);
-    this.solc = { ...this.solc, ...{ compiler, loading: false } };
+    // this.solc = { ...this.solc, ...{ compiler, loading: false } };
   }
 
   created() {
