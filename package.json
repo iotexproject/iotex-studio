@@ -15,6 +15,9 @@
     }
   },
   "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/cors": "^2.8.7",
+    "@types/express-http-proxy": "^1.6.1",
     "@types/parse-github-url": "^1.0.0",
     "@types/prettier": "^2.0.1",
     "ace-mode-solidity": "^0.1.1",
