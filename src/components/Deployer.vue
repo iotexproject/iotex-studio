@@ -26,7 +26,7 @@
             .func-name.flex.justify-between.w-full.items-center(@click="contractConsturcter.showConstructorDetail=false")
               span Deploy
               el-icon.el-icon-arrow-up.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
-            .func-input-list.flex.items-center.my-2(v-for="(input,index) in $_.get(currentContract, 'abi.constructor.0.inputs')" :key="index")
+            .func-input-list.flex.items-center.my-2(v-if="$_.get(currentContract, 'abi.constructor.0')" v-for="(input,index) in $_.get(currentContract, 'abi.constructor.0.inputs')" :key="index")
               span.text-right(class="w-4/12") {{input.name}}: 
               el-input.ml-2(v-model="input.value" size="mini" class="w-4/12" :placeholder="input.type")
             .func-actions.flex.justify-end.items-center
@@ -34,9 +34,9 @@
                 el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600" )
               el-button(size="small" type="primary" @click="deployContract({fromDetail: true})")
                 span transact
-          .flex.flex-1(v-if="!contractConsturcter.showConstructorDetail && currentContract.abi.constructor[0]")
+          .flex.flex-1(v-if="!contractConsturcter.showConstructorDetail")
             el-button(style="width: 160px;min-width: 160px" size="mini" @click="deployContract" type="primary") Deploy Contract
-            el-input.flex-1( size="small" :placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))"  v-model="currentContract.abi.constructor[0].datas")
+            el-input.flex-1(v-if="$_.get(currentContract, 'abi.constructor.0')" size="small" :placeholder="parseInputs($_.get(currentContract, 'abi.constructor.0'))"  v-model="currentContract.abi.constructor[0].datas")
             span.func-bar-actions(@click="contractConsturcter.showConstructorDetail =true")
               el-icon.el-icon-arrow-down.cursor-pointer.ml-2(class="hover:text-blue-600" style="font-weight: bold;")
         .flex.mt-4(v-if="currentContract")
@@ -119,7 +119,7 @@ export default class Deployer extends Vue {
   }[] = [];
   deployForm = {
     constructorInput: null,
-    atContractInput: null,
+    atContractInput: null
   };
   deployedContract: {
     name: string;
@@ -141,14 +141,14 @@ export default class Deployer extends Vue {
   currentDeployProvider = AntennaUtils.providers.testnet;
 
   contractConsturcter = {
-    showConstructorDetail: false,
+    showConstructorDetail: false
   };
 
   form = {
     gasLimit: 3000000,
     gasPrice: 1,
     value: 0,
-    valueType: "Rau",
+    valueType: "Rau"
   };
 
   valueTypes = ["Rau", "KRau", "MRau", "GRua", "Qev", "Jing", "Iotx"];
@@ -170,6 +170,7 @@ export default class Deployer extends Vue {
     try {
       let data;
       const { inputTypes, datas, method } = this.getFuncDatas({ func, fromDetail: true });
+      console.log({});
       switch (contract.environment) {
         case "JavaScript VM":
           data = "0x" + jsvm.getData({ types: inputTypes, datas, method });
@@ -180,7 +181,7 @@ export default class Deployer extends Vue {
       }
       await this.copyText(data);
     } catch (error) {
-      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error.message });
     }
   }
 
@@ -191,7 +192,7 @@ export default class Deployer extends Vue {
       const contract: Deployer["deployedContract"] = { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false, environment: this.currentEnvironment, provider: this.currentDeployProvider };
       this.$set(this.deployedContracts, address, contract);
     } catch (error) {
-      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error.message });
     }
   }
 
@@ -200,6 +201,7 @@ export default class Deployer extends Vue {
       const { privateKey = "", address: callerAddress } = this.account;
       const { bytecode, name, abiRaw, abi } = this.currentContract;
       const { datas, inputTypes, outputTypes, method, stateMutability } = this.getFuncDatas({ func: this.currentContract.abi.constructor[0], fromDetail });
+      console.log({ datas, inputTypes, outputTypes, method, stateMutability });
 
       let { gasLimit, gasPrice } = this.form;
       gasLimit = Number(gasLimit);
@@ -207,7 +209,7 @@ export default class Deployer extends Vue {
       const senderPrivateKey = new Buffer(privateKey, "hex");
       const { inputs = [] } = _.get(this.currentContract, "abi.constructor.0", {});
 
-      const types = inputs.map((i) => i.type);
+      const types = inputs.map(i => i.type);
       types.forEach((o, i) => {
         if (!datas[i]) {
           datas[i] = defaultTypeValue[o];
@@ -243,10 +245,10 @@ export default class Deployer extends Vue {
       if (actionHash) {
         eventBus.emit("term.message", { text: `Deploy Contract: ${name}, actionHash: ${actionHash}` });
         await retryPromise((retry, number) => antenna.iotx.getReceiptByAction({ actionHash }).catch(retry), { retries: 3, minTimeout: 10000, maxTimeout: 10000 }).then(
-          async (value) => {
+          async value => {
             address = value.receiptInfo.receipt.contractAddress;
           },
-          async (err) => {
+          async err => {
             eventBus.emit("term.message", { text: `Failed to check action receipt ${err}` });
           }
         );
@@ -257,8 +259,8 @@ export default class Deployer extends Vue {
           text: `Deploy Contract: ${name}, \n Address: ${address}`,
           data: {
             contractName: name,
-            contractAddress: address,
-          },
+            contractAddress: address
+          }
         });
         const contract: Deployer["deployedContract"] = { address, name, abi: _.cloneDeep(abi), abiRaw, visible: false, environment: this.currentEnvironment };
         console.log(contract);
@@ -266,19 +268,23 @@ export default class Deployer extends Vue {
         this.reloadAccounts();
       }
     } catch (error) {
-      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+      console.error(error);
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error.message });
     }
   }
 
   getFuncDatas({ func, fromDetail = false }: { func: AbiFunc; fromDetail?: boolean }) {
+    if (!func) {
+      return { method: "", inputTypes: [], outputTypes: [], datas: [], stateMutability: false };
+    }
     const { inputs = [], outputs = [], name: method, stateMutability } = func;
-    const inputTypes = inputs.map((i) => i.type);
-    const outputTypes = outputs.map((i) => i.type);
+    const inputTypes = inputs.map(i => i.type);
+    const outputTypes = outputs.map(i => i.type);
     let datas;
     if (fromDetail) {
-      datas = func.inputs.map((i) => i.value || defaultTypeValue[i.type]);
+      datas = func.inputs.map(i => i.value || defaultTypeValue[i.type]);
     } else {
-      datas = func.datas ? func.datas.split(",") : [];
+      datas = func.datas ? func.datas.split(" ") : [];
       inputTypes.forEach((o, i) => {
         if (!datas[i]) {
           datas[i] = defaultTypeValue[o];
@@ -297,6 +303,7 @@ export default class Deployer extends Vue {
       const { value } = this;
 
       const { datas, inputTypes, outputTypes, method, stateMutability } = this.getFuncDatas({ func, fromDetail });
+      console.log({});
 
       let callFunc, err, result;
 
@@ -312,7 +319,7 @@ export default class Deployer extends Vue {
                 contractAddress,
                 callerAddress,
                 types: inputTypes,
-                datas,
+                datas
               })
             : jsvm.interactContract({
                 method,
@@ -321,7 +328,7 @@ export default class Deployer extends Vue {
                 types: inputTypes,
                 datas,
                 value,
-                gasLimit,
+                gasLimit
               });
 
           console.log({ method, senderPrivateKey, callerAddress, contractAddress, types: inputTypes, datas, value, gasLimit });
@@ -331,7 +338,7 @@ export default class Deployer extends Vue {
             return eventBus.emit("term.message", {
               component: "alert",
               type: "error",
-              text: `call to ${contract.name}.${method} errored: ${err.errorType || ""}: ${err.error || err.message || ""}`,
+              text: `call to ${contract.name}.${method} errored: ${err.errorType || ""}: ${err.error || err.message || ""}`
             });
           }
 
@@ -367,7 +374,7 @@ export default class Deployer extends Vue {
           break;
       }
     } catch (error) {
-      eventBus.emit("term.message", { component: "alert", type: "error", text: error });
+      eventBus.emit("term.message", { component: "alert", type: "error", text: error.message });
     }
   }
 
@@ -390,8 +397,8 @@ export default class Deployer extends Vue {
   }
 
   parseInputs(item) {
-    if (item.inputs.length == 0) return null;
-    return item.inputs.map((input) => `${input.name} ${input.type}`);
+    if (!item || !item.inputs.length) return null;
+    return item.inputs.map(input => `${input.name} ${input.type}`);
   }
 
   async initJSVM() {
@@ -410,7 +417,7 @@ export default class Deployer extends Vue {
       return eventBus.emit("term.message", {
         component: "alert",
         type: "warning",
-        text: "Load account failed. Please make sure Iopay-desktop is opened and also has unlocked the wallet.",
+        text: "Load account failed. Please make sure Iopay-desktop is opened and also has unlocked the wallet."
       });
     }
 
@@ -435,7 +442,7 @@ export default class Deployer extends Vue {
   onContractChange() {
     this.deployForm = {
       constructorInput: null,
-      atContractInput: null,
+      atContractInput: null
     };
   }
 
@@ -452,7 +459,7 @@ export default class Deployer extends Vue {
 
   created() {
     this.initJSVM();
-    eventBus.on("solc.compiled.finished", (result) => {
+    eventBus.on("solc.compiled.finished", result => {
       _.each(result, (v, k) => {
         const { name } = v;
         const abi = _.groupBy(v.abi, "type");
