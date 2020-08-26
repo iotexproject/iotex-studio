@@ -103,6 +103,10 @@ export default class FileManager extends Vue {
     });
   }
 
+  getSharePath(filePath) {
+    return filePath.replace(`${this.curDir}/localhost/`, "");
+  }
+
   async created() {
     eventBus
       .on("fs.ready", async () => {
@@ -164,6 +168,11 @@ export default class FileManager extends Vue {
         const filePath = path.join(target.path, fileName);
 
         await this.writeFile({ path: filePath, content: "" });
+
+        if (filePath.includes("localhost")) {
+          const path = this.getSharePath(filePath);
+          await sf.set({ path, content: "" });
+        }
       } else if (type == "dir") {
         const filePath = path.join(target.path, name);
         await this.fileManager.ensureDir(filePath);
@@ -189,9 +198,18 @@ export default class FileManager extends Vue {
     this.$set(file, "edit", false);
     if (!file.editName) return;
     const dir = path.dirname(file.path);
-    const newFileName = file.editName.replace(".sol", "") + ".sol";
+    const ext = path.extname(file.editName);
+    const newFileName = ext ? file.editName : file.editName + ".sol";
     const newPath = `${dir}/${newFileName}`;
     await fs.promises.rename(file.path, newPath);
+
+    //TODO: warp to function
+    if (file.path.includes("localhost")) {
+      const oldPath = this.getSharePath(file.path);
+      const _newPath = this.getSharePath(newPath);
+      await sf.rename({ oldPath, newPath: _newPath });
+    }
+
     this.curEditFile = null;
     this.loadFiles();
   }
@@ -313,8 +331,13 @@ export default class FileManager extends Vue {
     };
   }
 
-  saveCurrentFile() {
+  async saveCurrentFile() {
     this.writeFile({ path: this.curFilePath, content: this.content });
+    if (this.curFilePath.includes("localhost")) {
+      const path = this.getSharePath(this.curFilePath);
+
+      await sf.set({ path, content: this.content });
+    }
   }
 
   handleNodeContextMenu(e, node: FS["file"]) {

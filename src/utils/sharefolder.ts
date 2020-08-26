@@ -69,6 +69,15 @@ export class ShareFolder {
     const res = await this.call({ method: "get", args: [{ path }] });
     return res.payload;
   }
+  async set({ path, content }) {
+    await this.call({ method: "set", args: [{ path, content }] });
+  }
+  async rename({ oldPath, newPath }) {
+    await this.call({ method: "rename", args: [{ oldPath, newPath }] });
+  }
+  async remove({ path }) {
+    await await this.call({ method: "remove", args: [{ path }] });
+  }
 }
 
 export const sf = new ShareFolder();
