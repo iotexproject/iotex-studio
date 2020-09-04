@@ -4,7 +4,7 @@
     el-form(label-position="left" label-width="80px" )
       el-form-item(label="Compiler")
         el-select(v-model="version")
-          el-option(v-for="item in solc.versions.releases" :key="item" :label="item" :value="item")
+          el-option(v-for="(item, version) in versions" :key="item" :label="item" :value="item" v-if="")
       div.mt-2.w-full
         el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile Contract
       .contract.mt-4(v-if="currentContractName")
@@ -44,6 +44,8 @@ export default class Compiler extends Vue {
   @Sync("editor/solc@currentContractName") currentContractName: string;
   @Sync("editor/solc@compileLoading") compileLoading: boolean;
   @Sync("editor/solc@compileResult") compileResult: EditorStore["solc"]["compileResult"];
+
+  @Get("editor/versions") versions: { [key: string]: string };
 
   async compile() {
     try {

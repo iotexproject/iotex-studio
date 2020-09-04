@@ -4,6 +4,8 @@ import store from "@/store";
 import { FS } from "../utils/fs";
 import ace from "brace";
 import { CompiledContract } from "./type";
+import { _ } from "../utils/lodash";
+import semver from "semver";
 
 const state: {
   fileManager: {
@@ -62,6 +64,15 @@ const getters: {
   [key: string]: (state: EditorStore) => any;
 } = {
   curFile: (state) => store.state.editor.fileManager.files[store.state.storage.curProject.fileManager.curFilePath],
+  versions: (state) => {
+    const versions = {};
+    _.each(state.solc.versions.releases, (v, k) => {
+      if (semver.satisfies(k, "0.1.1 - 0.5.13")) {
+        versions[k] = v;
+      }
+    });
+    return versions;
+  },
 };
 const mutations = make.mutations(state);
 
