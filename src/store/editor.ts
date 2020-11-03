@@ -40,7 +40,8 @@ const state: {
     filesLoaded: [],
     defaultFiles: [
       { path: "/project/default/test.sol", content: constant.defaultContract, ensure: true },
-      // { path: "/project/default/erc20/erc20.sol", content: constant.erc20, ensure: true }
+      { path: "/project/default/erc20/erc20.sol", content: constant.erc20, ensure: true },
+      { path: "/project/default/erc721/erc721.sol", content: constant.erc721, ensure: true },
     ],
   },
 
