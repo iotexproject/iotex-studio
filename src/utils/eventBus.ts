@@ -39,6 +39,7 @@ eventBus.on("editor.init", (editor) => {
   require("brace/ext/language_tools");
   require("brace/mode/javascript");
   require("ace-mode-solidity/build/remix-ide/mode-solidity");
+  require("brace/ext/searchbox");
   require("brace/snippets/javascript");
   editor.commands.addCommand({
     name: "SaveAndCompile",
