@@ -8,22 +8,24 @@ import path from "path";
 import axios from "axios";
 
 const solcWrapper = solcjsCore.solcWrapper.wrapper;
+const getCompile = solcjsCore.getCompile;
+
 export class SolcmManager {
   static resolveEngine = new resolverEngine().addResolver(resolveGithub).addResolver(resolveHttp);
   static compiler: any;
   static async loadSolc(version) {
     // const url = await solcVersion.version2url(version);
-    const url = process.env.NODE_ENV == "production" ? `https://ide-solc-iotex.b-cdn.net/bin/${version}` : `https://solc-bin.ethereum.org/bin/${version}`;
+    const url = process.env.NODE_ENV == "production" ? `https://ide-solc-iotex.b-cdn.net/bin/${version}` : `/bin/${version}`;
+    console.time('[fetch compiler]');
     let compilersource = await solcjsCore.getCompilersource(url);
-    // let compilersource = await axios.get(url);
-
+    console.timeEnd('[fetch compiler]');
     const solcjson = solcjsCore.loadModule(compilersource);
     const compiler = (this.compiler = solcWrapper(solcjson));
     return compiler;
   }
 
   static async compile({ name, content }: { name: string; content: string }) {
-    content = content.replace(/"..\//g, `"${path.dirname(path.dirname(name))}/`).replace(/".\//g, `"${path.dirname(name)}/`);
+    content = content.replace(/("|')..\//g, `$1${path.dirname(path.dirname(name))}/`).replace(/("|').\//g, `$1${path.dirname(name)}/`);
 
     let readCallback = await solcjsCore.getReadCallback(content, async (filePath: string) => {
       const { files } = store.state.editor.fileManager;
@@ -31,7 +33,7 @@ export class SolcmManager {
       const file = files[filePath] || files[_filePath];
 
       if (file) {
-        let _content = file.content.replace(/"..\//g, `"${path.dirname(path.dirname(filePath))}/`).replace(/".\//g, `"${path.dirname(filePath)}/`);
+        let _content = file.content.replace(/("|')..\//g, `$1${path.dirname(path.dirname(filePath))}/`).replace(/("|').\//g, `$1${path.dirname(filePath)}/`);
 
         return _content;
       }

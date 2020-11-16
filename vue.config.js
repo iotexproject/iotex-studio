@@ -8,6 +8,20 @@ const { ProvidePlugin } = require("webpack");
 const options = {
   configureWebpack: {
     devtool: "source-map",
+    devServer: {
+      historyApiFallback: true,
+      open: false,
+      host: 'localhost',
+      port: 8080,
+      https: false,
+      proxy: {
+          "/bin": {
+              "target": "http://solc-bin.ethereum.org/",
+              "changeOrigin": true
+          }
+      }
+
+  },
     resolve: {
       alias: {
         fs: "browserfs/dist/shims/fs.js",
