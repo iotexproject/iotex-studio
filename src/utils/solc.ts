@@ -1,15 +1,11 @@
 import solcjsCore from "solcjs-core-fix";
-import solcVersion from "solc-version";
 import { resolverEngine } from "solc-resolver";
 import resolveGithub from "../plugins/resolve-github";
 import resolveHttp from "resolve-http";
 import store from "@/store";
 import path from "path";
-import axios from "axios";
 
 const solcWrapper = solcjsCore.solcWrapper.wrapper;
-const getCompile = solcjsCore.getCompile;
-
 export class SolcmManager {
   static resolveEngine = new resolverEngine().addResolver(resolveGithub).addResolver(resolveHttp);
   static compiler: any;
