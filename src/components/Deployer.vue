@@ -7,8 +7,11 @@
         el-select.mb-1.w-full(v-model="currentEnvironment" )
           el-option(v-for="item in environments" :key="item" :label="item" :value="item")
       el-form-item(label="Account")
-        el-select.mb-1.w-full(v-model="accountIndex")
-          el-option(v-for="(item, index) in accounts" :key="index" :label="accountLabel(item)" :value="index")
+        .flex.flex-row.items-center
+          el-select.mb-1.flex-1(v-model="accountIndex")
+            el-option(v-for="(item, index) in accounts" :key="index" :label="accountLabel(item)" :value="index")
+          span(@click="copyText(account.address)")
+            el-icon.el-icon-document-copy.cursor-pointer.ml-2(class="hover:text-blue-600")
       el-form-item(label="Gas Limit")
         el-input.mb-1(v-model="form.gasLimit" size="small")
       el-form-item(label="Value")
