@@ -11,8 +11,6 @@ export const wsSigner = new WsSignerPlugin({
   },
 });
 
-wsSigner.readContract();
-
 export class AntennaUtils {
   static providers = {
     mainnet: { name: "mainnet", url: "https://api.iotex.one:443" },

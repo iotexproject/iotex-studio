@@ -73,16 +73,6 @@ export class WsSignerPlugin implements SignerPlugin {
     return res;
   }
 
-  public async readContract() {
-    await this.wait();
-    const req = {
-      type: "QUERY_PARAMS",
-      payload: { contractAddress: "io1xpvzahnl4h46f9ea6u03ec2hkusrzu020th8xx", method: "totalSupply" },
-    };
-    const res = await this.ws.sendRequest(req);
-    return res.accounts;
-  }
-
   public async getAccount(address: string): Promise<Account> {
     const acct = new Account();
     acct.address = address;

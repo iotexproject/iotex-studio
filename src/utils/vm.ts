@@ -25,7 +25,7 @@ export class JSVM {
       addressBuffer,
       privateKey,
       privateKeyBuffer,
-      account
+      account,
     };
   }
 
@@ -41,7 +41,7 @@ export class JSVM {
     datas = [],
     gasLimit = 3000000,
     gasPrice = 1,
-    value = 0
+    value = 0,
   }: {
     senderPrivateKey: Buffer;
     bytecode: Buffer;
@@ -60,7 +60,7 @@ export class JSVM {
       gasLimit,
       gasPrice,
       data,
-      nonce
+      nonce,
     });
 
     tx.sign(senderPrivateKey);
@@ -82,7 +82,7 @@ export class JSVM {
       to: _contractAddress,
       caller: _callerAddress,
       origin: _callerAddress,
-      data: util.toBuffer(data)
+      data: util.toBuffer(data),
     });
 
     eventBus.emit("term.info", {
@@ -90,8 +90,8 @@ export class JSVM {
       data: {
         from: callerAddress,
         to: contractAddress,
-        data
-      }
+        data,
+      },
     });
 
     if (result.execResult.exceptionError) {
@@ -101,6 +101,7 @@ export class JSVM {
   }
 
   getData({ types = [], datas = [], method }: { types?: string[]; datas?: string[]; method: string }) {
+    datas = datas.map((i) => i.replace(/^io/, "0x"));
     const params = abi.rawEncode(types, datas);
     let data = abi.methodID(method, types).toString("hex") + params.toString("hex");
     return data;
@@ -114,7 +115,7 @@ export class JSVM {
     contractAddress,
     types = [],
     datas = [],
-    method
+    method,
   }: {
     method: string;
     senderPrivateKey: Buffer;
@@ -136,7 +137,7 @@ export class JSVM {
       gasLimit,
       gasPrice,
       data,
-      nonce
+      nonce,
     });
 
     tx.sign(senderPrivateKey);
@@ -144,15 +145,15 @@ export class JSVM {
     const message = {
       senderAddress: `io${tx.getSenderAddress().toString("hex")}`,
       contractAddress,
-      data
+      data,
     };
     eventBus.emit("term.info", {
       text: `call from: ${truncate(message.senderAddress, 12, "...")},to:${truncate(message.contractAddress, 12, "...")},data:${truncate(message.data, 12, "...")} `,
       data: {
         from: message.senderAddress,
         to: message.contractAddress,
-        data: message.data
-      }
+        data: message.data,
+      },
     });
 
     if (result.execResult.exceptionError) {
