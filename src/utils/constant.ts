@@ -163,9 +163,10 @@ contract ViperToken is ERC721Full {
 `;
 
 export const defaultTypeValue = {
-  address: "io000000000000000000000000000000000000000",
+  address: "io1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqd39ym7",
   uint256: "0",
   "uint256[]": "[]",
   string: "",
-  "string[": "[]",
+  "string[]": "[]",
+  "address[]": [],
 };

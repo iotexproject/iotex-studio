@@ -299,7 +299,7 @@ export default class Deployer extends Vue {
     let datas;
 
     if (fromDetail) {
-      datas = func.inputs.map((i) => JSON.parse(i.value) || defaultTypeValue[i.type]);
+      datas = func.inputs.map((i) => (i.value ? JSON.parse(i.value) : defaultTypeValue[i.type]));
     } else {
       datas = func.datas ? func.datas.split(" ") : [];
       inputTypes.forEach((o, i) => {
