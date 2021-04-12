@@ -6,6 +6,7 @@ const state: {
   curProject: {
     solc: {
       version: string;
+      optimizer: boolean;
     };
     fileManager: {
       curDir: string;
@@ -51,6 +52,7 @@ const state: {
   curProject: {
     solc: {
       version: "soljson-v0.5.5+commit.47a71e8f.js",
+      optimizer: false,
     },
     fileManager: {
       curDir: "/project/default",

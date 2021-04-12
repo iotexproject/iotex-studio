@@ -6,6 +6,7 @@
         el-select(v-model="version")
           el-option(v-for="(item, version) in versions" :key="item" :label="item" :value="item" v-if="")
       div.mt-2.w-full
+        el-checkbox.mb-4(v-model="optimizer") Enable Optimization
         el-button.w-full(@click="compile" :loading="solc.loading || solc.compileLoading" size="small" type="primary") Compile Contract
       .contract.mt-4(v-if="currentContractName")
         el-form-item(label="Contract")
@@ -22,8 +23,6 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Sync, Get } from "vuex-pathify";
 import { eventBus } from "../utils/eventBus";
 import { _ } from "../utils/lodash";
-import solcjs from "solc-js";
-import { Helper } from "../utils/helper";
 import { SolcmManager } from "../utils/solc";
 import * as path from "path";
 import { EditorStore } from "../store/editor";
@@ -34,6 +33,7 @@ import axios from "axios";
 @Component
 export default class Compiler extends Vue {
   @Sync("storage/curProject@solc.version") version: string;
+  @Sync("storage/curProject@solc.optimizer") optimizer: boolean;
 
   @Sync("storage/ace@content") content: string;
   @Sync("editor/ace@editor") editor: EditorStore["ace"]["editor"];
@@ -52,10 +52,11 @@ export default class Compiler extends Vue {
       if (!this.solc.compiler) return;
       this.compileLoading = true;
       const { path: filePath, content, name: fileName } = this.curFile;
+      const optimizer = this.optimizer ? 1 : 0;
 
       this.editor.session.clearAnnotations();
       console.log({ name: filePath, content });
-      let res = await SolcmManager.compile({ name: filePath, content });
+      let res = await SolcmManager.compile({ name: filePath, content, optimizer });
       console.log({ res });
       if (res.errors) {
         const errs = res.errors.map((err) => {

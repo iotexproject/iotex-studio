@@ -12,17 +12,16 @@ export class SolcmManager {
   static async loadSolc(version) {
     // const url = await solcVersion.version2url(version);
     const url = process.env.NODE_ENV == "production" ? `https://ide-solc-iotex.b-cdn.net/bin/${version}` : `/bin/${version}`;
-    console.time('[fetch compiler]');
+    console.time("[fetch compiler]");
     let compilersource = await solcjsCore.getCompilersource(url);
-    console.timeEnd('[fetch compiler]');
+    console.timeEnd("[fetch compiler]");
     const solcjson = solcjsCore.loadModule(compilersource);
     const compiler = (this.compiler = solcWrapper(solcjson));
     return compiler;
   }
 
-  static async compile({ name, content }: { name: string; content: string }) {
+  static async compile({ name, content, optimizer = 0 }: { name: string; content: string; optimizer: number }) {
     content = content.replace(/("|')..\//g, `$1${path.dirname(path.dirname(name))}/`).replace(/("|').\//g, `$1${path.dirname(name)}/`);
-
     let readCallback = await solcjsCore.getReadCallback(content, async (filePath: string) => {
       const { files } = store.state.editor.fileManager;
       const _filePath = path.resolve(path.dirname(name), filePath);
@@ -40,7 +39,7 @@ export class SolcmManager {
 
       return data;
     });
-    const res = this.compiler.compile(content, 1, readCallback);
+    const res = this.compiler.compile(content, optimizer, readCallback);
     console.log({ res });
     const {
       contracts: { MyContract: MyContract_contract, ...otherContracts } = { MyContract: {} },

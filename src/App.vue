@@ -46,10 +46,16 @@ body
     line-height 30px
   .el-icon-caret-right
     display none
-  .el-tree, .el-input_inner, .el-input, .el-input__inner, .el-select-dropdown, .el-popper, .el-form-item__label, .el-message-box, .v-contextmenu, .el-dialog
+  .el-tree, .el-input_inner, .el-input, .el-input__inner, .el-select-dropdown, .el-popper, .el-form-item__label, .el-message-box, .v-contextmenu, .el-dialog, .el-checkbox__input, .el-checkbox__label
     color color-dark-text
     background-color color-dark
     border-color color-dark-input-border
+  .el-checkbox,
+    .is-checked
+      .el-checkbox__input, .el-checkbox__label, .el-checkbox__inner
+        color color-dark-text !important
+        background-color color-dark !important
+        border-color color-dark-input-border !important
   .el-select-dropdown__item
     &.selected
       color lighten(color-dark-text, 20%)
