@@ -98,7 +98,7 @@ import { utils } from "ethers";
 import abi from "ethereumjs-abi";
 import path from "path";
 import { defaultTypeValue } from "../utils/constant";
-import { Helper } from "../utils/helper";
+import { Helper, helper } from '../utils/helper';
 import { wsSigner, antenna, AntennaUtils } from "../utils/antenna";
 import { toRau } from "iotex-antenna/lib/account/utils";
 import retryPromise from "promise-retry";
@@ -299,7 +299,7 @@ export default class Deployer extends Vue {
     let datas;
 
     if (fromDetail) {
-      datas = func.inputs.map((i) => (i.value ? JSON.parse(i.value) : defaultTypeValue[i.type]));
+      datas = func.inputs.map((i) => (i.value ? helper.safeJSONParse(i.value) : defaultTypeValue[i.type]));
     } else {
       datas = func.datas ? func.datas.split(" ") : [];
       inputTypes.forEach((o, i) => {
